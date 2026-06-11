@@ -9,6 +9,9 @@ export async function GET() {
     return NextResponse.json(status);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to inspect HWPX template.";
-    return NextResponse.json({ available: false, placeholders: [], error: message }, { status: 500 });
+    return NextResponse.json(
+      { available: false, placeholders: [], generatedExport: false, error: message },
+      { status: 500 },
+    );
   }
 }

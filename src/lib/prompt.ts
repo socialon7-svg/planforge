@@ -14,6 +14,18 @@ Hard rules:
 - Prefer concrete execution plans, outputs, customers, and validation methods over advertising language.
 - Return only valid JSON matching the requested schema.`;
 
+const anonymizedPdfTemplatePattern = `
+Anonymized PSST template pattern learned from the user's local PDF examples:
+- Start with an item summary table-like flow: item name, category, item overview, Problem summary, Solution summary, Scale-up summary, Team summary.
+- Use the major PSST body sections: Problem, Solution, Scale-up, Team.
+- Problem should connect market/environment change, target customer pain, current alternative limits, and development necessity.
+- Solution should describe final MVP output, development scope, core features, validation method, differentiation, and competitiveness.
+- Scale-up should combine competitor analysis, market entry, business model, roadmap, partner strategy, and funding/investment plan.
+- Team should focus on roles, capabilities, partners, and missing-capability supplementation without personal details.
+- Prefer bullet paragraphs, measurable outputs, grant-period milestones, budget-output linkage, and evaluator-friendly practical writing.
+- Never reuse names, file names, original sentences, schools, workplaces, or contact details from the PDFs.
+`;
+
 export function buildUserPrompt(
   input: IdeaInput,
   ragContext: Record<string, RagReference[]>,
@@ -40,6 +52,9 @@ ${JSON.stringify(input, null, 2)}
 
 Section writing rules:
 ${sectionInstructions}
+
+PDF-derived PSST template pattern:
+${anonymizedPdfTemplatePattern}
 
 RAG references:
 Use the following only for structure, reasoning flow, and evaluation perspective. Do not output source_file, chunk_id, or page_range.

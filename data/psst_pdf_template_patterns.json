@@ -1,0 +1,248 @@
+{
+  "source": "10 user-provided PSST-like PDF plans, processed locally with filenames anonymized and no raw text retained.",
+  "privacy": "No raw PDF text, names, original filenames, contact details, school names, or workplace names are stored in this file.",
+  "documentStats": {
+    "count": 10,
+    "avgPages": 13.6,
+    "avgChars": 12191
+  },
+  "observedStructure": [
+    "Open with item summary table: item name, category, short overview, Problem/Solution/Scale-up/Team summary.",
+    "Use PSST major sections: Problem, Solution, Scale-up, Team.",
+    "Problem section usually moves from market/environment change to customer pain, current alternatives, and need for the item.",
+    "Solution section explains MVP output, core functions, development method, differentiation, and validation plan.",
+    "Scale-up combines competitor analysis, market entry, business model, roadmap, and follow-up growth strategy.",
+    "Team section describes founder/team/partner roles and missing capability supplementation without unnecessary personal detail.",
+    "Plans commonly use compact headings, bullet paragraphs, tables, measurable outputs, and grant-period milestones."
+  ],
+  "hwpxGenerationPattern": {
+    "firstPage": [
+      "Item summary table",
+      "Problem summary",
+      "Solution summary",
+      "Scale-up summary",
+      "Team summary",
+      "Image/diagram placeholder"
+    ],
+    "bodySections": [
+      "1. Problem",
+      "2. Solution",
+      "3. Scale-up",
+      "4. Team",
+      "5. Budget and roadmap appendix"
+    ],
+    "paragraphStyle": "Use public grant proposal tone, bullets, measurable outputs, validation plan, and practical execution details."
+  },
+  "anonymizedStats": [
+    {
+      "caseId": "case_01",
+      "pages": 15,
+      "chars": 10303,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 2,
+        "팀 구성": 3,
+        "창업 아이템": 5,
+        "사업화": 2,
+        "시장": 0,
+        "경쟁": 5,
+        "비즈니스 모델": 0,
+        "로드맵": 0,
+        "예산": 0,
+        "자금": 4
+      },
+      "bulletCount": 31,
+      "tableLikeSignals": 31
+    },
+    {
+      "caseId": "case_02",
+      "pages": 17,
+      "chars": 11788,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 2,
+        "팀 구성": 5,
+        "창업 아이템": 4,
+        "사업화": 2,
+        "시장": 31,
+        "경쟁": 7,
+        "비즈니스 모델": 2,
+        "로드맵": 1,
+        "예산": 1,
+        "자금": 2
+      },
+      "bulletCount": 65,
+      "tableLikeSignals": 42
+    },
+    {
+      "caseId": "case_03",
+      "pages": 15,
+      "chars": 11384,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 2,
+        "팀 구성": 4,
+        "창업 아이템": 8,
+        "사업화": 1,
+        "시장": 6,
+        "경쟁": 3,
+        "비즈니스 모델": 1,
+        "로드맵": 0,
+        "예산": 0,
+        "자금": 0
+      },
+      "bulletCount": 89,
+      "tableLikeSignals": 38
+    },
+    {
+      "caseId": "case_04",
+      "pages": 15,
+      "chars": 20912,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 2,
+        "팀 구성": 4,
+        "창업 아이템": 9,
+        "사업화": 39,
+        "시장": 16,
+        "경쟁": 20,
+        "비즈니스 모델": 3,
+        "로드맵": 1,
+        "예산": 0,
+        "자금": 5
+      },
+      "bulletCount": 114,
+      "tableLikeSignals": 47
+    },
+    {
+      "caseId": "case_05",
+      "pages": 16,
+      "chars": 15516,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 2,
+        "팀 구성": 3,
+        "창업 아이템": 6,
+        "사업화": 3,
+        "시장": 12,
+        "경쟁": 6,
+        "비즈니스 모델": 1,
+        "로드맵": 0,
+        "예산": 0,
+        "자금": 2
+      },
+      "bulletCount": 195,
+      "tableLikeSignals": 32
+    },
+    {
+      "caseId": "case_06",
+      "pages": 13,
+      "chars": 8494,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 3,
+        "팀 구성": 4,
+        "창업 아이템": 4,
+        "사업화": 4,
+        "시장": 12,
+        "경쟁": 2,
+        "비즈니스 모델": 2,
+        "로드맵": 0,
+        "예산": 0,
+        "자금": 0
+      },
+      "bulletCount": 49,
+      "tableLikeSignals": 34
+    },
+    {
+      "caseId": "case_07",
+      "pages": 15,
+      "chars": 11519,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 2,
+        "팀 구성": 5,
+        "창업 아이템": 17,
+        "사업화": 6,
+        "시장": 27,
+        "경쟁": 14,
+        "비즈니스 모델": 6,
+        "로드맵": 2,
+        "예산": 0,
+        "자금": 0
+      },
+      "bulletCount": 149,
+      "tableLikeSignals": 43
+    },
+    {
+      "caseId": "case_08",
+      "pages": 10,
+      "chars": 8416,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 2,
+        "팀 구성": 4,
+        "창업 아이템": 4,
+        "사업화": 1,
+        "시장": 28,
+        "경쟁": 15,
+        "비즈니스 모델": 1,
+        "로드맵": 2,
+        "예산": 0,
+        "자금": 0
+      },
+      "bulletCount": 113,
+      "tableLikeSignals": 32
+    },
+    {
+      "caseId": "case_09",
+      "pages": 4,
+      "chars": 11345,
+      "termCounts": {
+        "문제 인식": 2,
+        "실현 가능성": 2,
+        "성장전략": 2,
+        "팀 구성": 3,
+        "창업 아이템": 10,
+        "사업화": 1,
+        "시장": 11,
+        "경쟁": 11,
+        "비즈니스 모델": 2,
+        "로드맵": 0,
+        "예산": 2,
+        "자금": 1
+      },
+      "bulletCount": 167,
+      "tableLikeSignals": 43
+    },
+    {
+      "caseId": "case_10",
+      "pages": 16,
+      "chars": 12229,
+      "termCounts": {
+        "문제 인식": 3,
+        "실현 가능성": 2,
+        "성장전략": 3,
+        "팀 구성": 4,
+        "창업 아이템": 4,
+        "사업화": 1,
+        "시장": 11,
+        "경쟁": 3,
+        "비즈니스 모델": 2,
+        "로드맵": 0,
+        "예산": 0,
+        "자금": 0
+      },
+      "bulletCount": 157,
+      "tableLikeSignals": 38
+    }
+  ]
+}

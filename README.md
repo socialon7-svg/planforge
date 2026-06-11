@@ -20,7 +20,8 @@ Vercel project:
 - 12 editable result sections
 - Copy all and copy section
 - JSON, Markdown, and HWPX download
-- HWPX template status check and disabled export when placeholders are missing
+- HWPX template status check
+- HWPX export that either replaces placeholders or generates a PSST-style HWPX body when placeholders are missing
 - Sample input button for quick testing
 - Self-diagnosis checklist
 - Supabase pgvector schema for future migration
@@ -95,7 +96,11 @@ Place these placeholders in `templates/official_template.hwpx` to enable replace
 {{PARTNERS}}
 ```
 
-The currently provided template is available, but it does not contain supported placeholders yet. The app detects this and disables HWPX export until placeholders are inserted into the template.
+The currently provided template is available, but it does not contain supported placeholders yet. The app detects this and falls back to generating a PSST-style HWPX body from the draft.
+
+## PDF Template Pattern Source
+
+The user-provided PDF plans are processed locally with anonymized temporary filenames. Raw PDFs, original filenames, names, contact details, school names, workplace names, and raw extracted text are not stored in the repository. Only aggregate writing-pattern metadata is stored in `data/psst_pdf_template_patterns.json`.
 
 ## Implemented
 
@@ -106,6 +111,8 @@ The currently provided template is available, but it does not contain supported 
 - Editable result UI
 - JSON, Markdown, and HWPX download
 - HWPX placeholder detection API: `/api/templates/hwpx/status`
+- Placeholder-free generated HWPX export
+- Anonymized PDF-derived PSST template pattern metadata
 - README, AGENTS, `.env.example`, Supabase schema
 
 ## TODO

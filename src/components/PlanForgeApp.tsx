@@ -80,8 +80,9 @@ export default function PlanForgeApp() {
   const [hwpxStatus, setHwpxStatus] = useState<{
     available: boolean;
     placeholders: string[];
+    generatedExport: boolean;
     loaded: boolean;
-  }>({ available: false, placeholders: [], loaded: false });
+  }>({ available: false, placeholders: [], generatedExport: false, loaded: false });
 
   const requiredReady = useMemo(
     () =>
@@ -91,7 +92,7 @@ export default function PlanForgeApp() {
     [input],
   );
 
-  const hwpxReady = hwpxStatus.available && hwpxStatus.placeholders.length > 0;
+  const hwpxReady = hwpxStatus.available && (hwpxStatus.placeholders.length > 0 || hwpxStatus.generatedExport);
 
   useEffect(() => {
     let alive = true;
@@ -102,12 +103,13 @@ export default function PlanForgeApp() {
         setHwpxStatus({
           available: Boolean(status.available),
           placeholders: Array.isArray(status.placeholders) ? status.placeholders : [],
+          generatedExport: Boolean(status.generatedExport),
           loaded: true,
         });
       })
       .catch(() => {
         if (!alive) return;
-        setHwpxStatus({ available: false, placeholders: [], loaded: true });
+        setHwpxStatus({ available: false, placeholders: [], generatedExport: false, loaded: true });
       });
 
     return () => {
@@ -276,7 +278,7 @@ export default function PlanForgeApp() {
                     className="rounded-md bg-slate-950 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                     onClick={exportHwpx}
                     disabled={!hwpxReady}
-                    title={!hwpxReady ? "Add supported placeholders to the HWPX template first." : "Download HWPX"}
+                    title={!hwpxReady ? "HWPX template is missing." : "Download HWPX"}
                   >
                     HWPX \uB2E4\uC6B4\uB85C\uB4DC
                   </button>
@@ -284,10 +286,9 @@ export default function PlanForgeApp() {
               </div>
 
               {copied ? <p className="mx-4 mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{copied}</p> : null}
-              {hwpxStatus.loaded && !hwpxReady ? (
-                <p className="mx-4 mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  HWPX template is present, but no supported placeholders were found. Add placeholders such as
-                  {" {{PROBLEM}}"}, {" {{SOLUTION}}"}, and {" {{BUDGET}}"} to enable HWPX export.
+              {hwpxStatus.loaded && hwpxReady && hwpxStatus.placeholders.length === 0 ? (
+                <p className="mx-4 mt-4 rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-800">
+                  HWPX template has no placeholders, so export will generate a new PSST-style HWPX body from the draft.
                 </p>
               ) : null}
 

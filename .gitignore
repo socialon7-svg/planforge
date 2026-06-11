@@ -35,6 +35,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+private_pdf_sources/
 
 # typescript
 *.tsbuildinfo
