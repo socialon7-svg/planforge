@@ -1,21 +1,24 @@
 import { z } from "zod";
 import { sectionKeys } from "@/types/plan";
 
+const requiredText = (max: number) => z.string().trim().min(1).max(max);
+const optionalText = (max: number) => z.string().trim().max(max).optional().default("");
+
 export const ideaInputSchema = z.object({
-  itemName: z.string().min(1),
-  oneLine: z.string().min(1),
-  industry: z.string().min(1),
-  customers: z.string().min(1),
-  customerProblem: z.string().min(1),
-  solution: z.string().min(1),
-  coreTech: z.string().min(1),
-  competitors: z.string().optional().default(""),
-  revenueModel: z.string().min(1),
-  currentStatus: z.string().min(1),
-  team: z.string().min(1),
-  expectedBudget: z.string().min(1),
-  targetOutputs: z.string().min(1),
-  notes: z.string().optional().default(""),
+  itemName: requiredText(200),
+  oneLine: requiredText(500),
+  industry: requiredText(300),
+  customers: requiredText(1000),
+  customerProblem: requiredText(3000),
+  solution: requiredText(3000),
+  coreTech: requiredText(3000),
+  competitors: optionalText(1000),
+  revenueModel: requiredText(1000),
+  currentStatus: requiredText(3000),
+  team: requiredText(3000),
+  expectedBudget: requiredText(300),
+  targetOutputs: requiredText(1000),
+  notes: optionalText(3000),
 });
 
 const sectionSchema = z.object({

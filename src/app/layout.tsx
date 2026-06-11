@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PlanForge RAG",
-  description: "AI draft generator for PSST-style business plans",
+  description: "PSST \uAE30\uBC18 \uCC3D\uC5C5 \uC0AC\uC5C5\uACC4\uD68D\uC11C AI \uCD08\uC548 \uC0DD\uC131\uAE30",
 };
 
 export default function RootLayout({

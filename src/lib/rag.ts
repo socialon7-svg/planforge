@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { IdeaInput, RagChunk, RagReference, SectionKey } from "@/types/plan";
-import { sectionLabels } from "@/lib/sections";
+import { sectionDatasetLabels, sectionLabels } from "@/lib/sections";
 
 const dataPath = path.join(process.cwd(), "data", "rag_chunks_redacted.jsonl");
 let cachedChunks: RagChunk[] | null = null;
@@ -69,9 +69,11 @@ export function searchRagReferences(
   limit = 5,
 ): RagReference[] {
   const chunks = loadRagChunks();
-  const queryTokens = tokenize(inputText(input));
+  const queryText = inputText(input);
+  const normalizedQueryText = normalize(queryText);
+  const queryTokens = tokenize(queryText);
   const industryTokens = tokenize(input.industry);
-  const sectionLabel = sectionLabels[sectionKey].toLowerCase();
+  const sectionLabel = normalize(sectionDatasetLabels[sectionKey]);
 
   return chunks
     .map((chunk) => {
@@ -98,7 +100,7 @@ export function searchRagReferences(
       const sectionMatch = normalize(chunk.section) === sectionLabel ? 8 : 0;
       const tagMatch = tags.reduce((sum, tag) => {
         const tagText = normalize(tag);
-        return sum + (tagText && normalize(inputText(input)).includes(tagText) ? 2 : 0);
+        return sum + (tagText && normalizedQueryText.includes(tagText) ? 2 : 0);
       }, 0);
 
       return {

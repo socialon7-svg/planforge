@@ -7,9 +7,12 @@ import { sectionPlaceholders } from "@/lib/sections";
 
 const templatePath = path.join(process.cwd(), "templates", "official_template.hwpx");
 const placeholderPattern = /\{\{[A-Z_]+\}\}/g;
+const replacementPattern = /\{\{([A-Z_]+)\}\}/g;
+const diagnosisHeading = "\uC790\uAC00\uC9C4\uB2E8";
 
 function escapeXml(value: string): string {
   return value
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -36,6 +39,20 @@ function placeholderMap(plan: GeneratedPlan): Record<string, string> {
   return values;
 }
 
+function replacePlaceholders(
+  text: string,
+  replacements: Record<string, string>,
+): { text: string; replacementCount: number } {
+  let replacementCount = 0;
+  const replaced = text.replace(replacementPattern, (match, key: string) => {
+    if (!(key in replacements)) return match;
+    replacementCount += 1;
+    return escapeXml(replacements[key]);
+  });
+
+  return { text: replaced, replacementCount };
+}
+
 function extractRootOpen(sectionXml: string): string {
   const match = sectionXml.match(/^<\?xml[^>]*\s*\?><hs:sec[^>]*>/);
   if (!match) {
@@ -52,43 +69,47 @@ function extractSectionPropertiesParagraph(sectionXml: string): string {
   return match[0];
 }
 
-function paragraph(text: string, options: { heading?: boolean; pageBreak?: boolean } = {}): string {
+function paragraph(
+  id: number,
+  text: string,
+  options: { heading?: boolean; pageBreak?: boolean } = {},
+): string {
   const paraPrIDRef = options.heading ? "38" : "51";
   const charPrIDRef = options.heading ? "35" : "29";
-  return `<hp:p id="0" paraPrIDRef="${paraPrIDRef}" styleIDRef="0" pageBreak="${options.pageBreak ? "1" : "0"}" columnBreak="0" merged="0"><hp:run charPrIDRef="${charPrIDRef}"><hp:t>${textToHwpxText(text)}</hp:t></hp:run><hp:linesegarray><hp:lineseg textpos="0" vertpos="0" vertsize="1200" textheight="1200" baseline="1020" spacing="360" horzpos="0" horzsize="48188" flags="393216"/></hp:linesegarray></hp:p>`;
+  return `<hp:p id="${id}" paraPrIDRef="${paraPrIDRef}" styleIDRef="0" pageBreak="${options.pageBreak ? "1" : "0"}" columnBreak="0" merged="0"><hp:run charPrIDRef="${charPrIDRef}"><hp:t>${textToHwpxText(text)}</hp:t></hp:run><hp:linesegarray><hp:lineseg textpos="0" vertpos="0" vertsize="1200" textheight="1200" baseline="1020" spacing="360" horzpos="0" horzsize="48188" flags="393216"/></hp:linesegarray></hp:p>`;
 }
 
 function compact(value: string, maxLength = 560): string {
   const normalized = value.replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) return normalized;
-  return `${normalized.slice(0, maxLength - 1)}…`;
+  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
 }
 
 function generatedPlanLines(plan: GeneratedPlan): string[] {
   const lines = [
-    "□ 창업 아이템 개요(요약)",
+    "\u25A1 \uCC3D\uC5C5 \uC544\uC774\uD15C \uAC1C\uC694(\uC694\uC57D)",
     "",
-    `<명칭> ${compact(plan.basicInfo.body.split("\n")[0] || plan.itemSummary.body, 120)}`,
-    `<아이템 개요> ${compact(plan.itemSummary.body, 420)}`,
-    `<문제 인식(Problem)> ${compact(plan.problem.body, 420)}`,
-    `<실현 가능성(Solution)> ${compact(plan.solution.body, 420)}`,
-    `<성장전략(Scale-up)> ${compact(`${plan.market.body} ${plan.businessModel.body} ${plan.scaleUp.body}`, 520)}`,
-    `<팀 구성(Team)> ${compact(plan.team.body, 360)}`,
-    "<이미지> 제품·서비스 구조도 또는 MVP 화면 이미지를 삽입할 수 있습니다.",
+    `<\uBA85\uCE6D> ${compact(plan.basicInfo.body.split("\n")[0] || plan.itemSummary.body, 120)}`,
+    `<\uC544\uC774\uD15C \uAC1C\uC694> ${compact(plan.itemSummary.body, 420)}`,
+    `<\uBB38\uC81C \uC778\uC2DD(Problem)> ${compact(plan.problem.body, 420)}`,
+    `<\uC2E4\uD604 \uAC00\uB2A5\uC131(Solution)> ${compact(plan.solution.body, 420)}`,
+    `<\uC131\uC7A5\uC804\uB7B5(Scale-up)> ${compact(`${plan.market.body} ${plan.businessModel.body} ${plan.scaleUp.body}`, 520)}`,
+    `<\uD300 \uAD6C\uC131(Team)> ${compact(plan.team.body, 360)}`,
+    `<\uC774\uBBF8\uC9C0> \uC81C\uD488\u00B7\uC11C\uBE44\uC2A4 \uAD6C\uC870\uB3C4 \uB610\uB294 MVP \uD654\uBA74 \uC774\uBBF8\uC9C0\uB97C \uC0BD\uC785\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.`,
     "",
   ];
 
   const bodyOrder: Array<{ key: SectionKey; title: string }> = [
-    { key: "problem", title: "1. 문제 인식 (Problem)_창업 아이템의 필요성" },
-    { key: "solution", title: "2. 실현 가능성 (Solution)_창업 아이템의 개발 계획" },
-    { key: "market", title: "3. 시장 및 고객 정의" },
-    { key: "competitor", title: "4. 경쟁 분석 및 차별화 전략" },
-    { key: "businessModel", title: "5. 비즈니스 모델 및 수익화 계획" },
-    { key: "scaleUp", title: "6. 성장전략 (Scale-up)_시장 진입 및 확장" },
-    { key: "budget", title: "7. 사업비 사용계획" },
-    { key: "roadmap", title: "8. 추진 일정 및 로드맵" },
-    { key: "team", title: "9. 팀 구성 (Team)_역량 활용 계획" },
-    { key: "partners", title: "10. 협력기관 및 파트너 활용 계획" },
+    { key: "problem", title: "1. \uBB38\uC81C \uC778\uC2DD (Problem)_\uCC3D\uC5C5 \uC544\uC774\uD15C\uC758 \uD544\uC694\uC131" },
+    { key: "solution", title: "2. \uC2E4\uD604 \uAC00\uB2A5\uC131 (Solution)_\uCC3D\uC5C5 \uC544\uC774\uD15C\uC758 \uAC1C\uBC1C \uACC4\uD68D" },
+    { key: "market", title: "3. \uC2DC\uC7A5 \uBC0F \uACE0\uAC1D \uC815\uC758" },
+    { key: "competitor", title: "4. \uACBD\uC7C1 \uBD84\uC11D \uBC0F \uCC28\uBCC4\uD654 \uC804\uB7B5" },
+    { key: "businessModel", title: "5. \uBE44\uC988\uB2C8\uC2A4 \uBAA8\uB378 \uBC0F \uC218\uC775\uD654 \uACC4\uD68D" },
+    { key: "scaleUp", title: "6. \uC131\uC7A5\uC804\uB7B5 (Scale-up)_\uC2DC\uC7A5 \uC9C4\uC785 \uBC0F \uD655\uC7A5" },
+    { key: "budget", title: "7. \uC0AC\uC5C5\uBE44 \uC0AC\uC6A9\uACC4\uD68D" },
+    { key: "roadmap", title: "8. \uCD94\uC9C4 \uC77C\uC815 \uBC0F \uB85C\uB4DC\uB9F5" },
+    { key: "team", title: "9. \uD300 \uAD6C\uC131 (Team)_\uC5ED\uB7C9 \uD65C\uC6A9 \uACC4\uD68D" },
+    { key: "partners", title: "10. \uD611\uB825\uAE30\uAD00 \uBC0F \uD30C\uD2B8\uB108 \uD65C\uC6A9 \uACC4\uD68D" },
   ];
 
   bodyOrder.forEach((item) => {
@@ -96,7 +117,7 @@ function generatedPlanLines(plan: GeneratedPlan): string[] {
     lines.push(item.title, "", section.body, "");
   });
 
-  lines.push("자가진단", "");
+  lines.push(diagnosisHeading, "");
   plan.selfDiagnosis.forEach((item) => {
     lines.push(`- ${item.label}: ${item.status} / ${item.comment}`);
   });
@@ -107,11 +128,12 @@ function generatedPlanLines(plan: GeneratedPlan): string[] {
 function buildGeneratedSectionXml(templateSectionXml: string, plan: GeneratedPlan): string {
   const rootOpen = extractRootOpen(templateSectionXml);
   const secPrParagraph = extractSectionPropertiesParagraph(templateSectionXml);
+  let paragraphId = 1;
   const content = generatedPlanLines(plan)
     .flatMap((line, index) => {
-      if (!line.trim()) return [paragraph(" ")];
-      const isHeading = index === 0 || /^\d+\.\s|^자가진단/.test(line);
-      return [paragraph(line, { heading: isHeading })];
+      if (!line.trim()) return [paragraph(paragraphId++, " ")];
+      const isHeading = index === 0 || /^\d+\.\s/.test(line) || line === diagnosisHeading;
+      return [paragraph(paragraphId++, line, { heading: isHeading })];
     })
     .join("");
 
@@ -161,13 +183,10 @@ export async function createHwpxFromTemplate(plan: GeneratedPlan): Promise<Buffe
   await Promise.all(
     Object.values(zip.files).map(async (file) => {
       if (file.dir || !/\.(xml|txt|hpf|rdf)$/i.test(file.name)) return;
-      let text = await file.async("string");
-      Object.entries(replacements).forEach(([key, value]) => {
-        const marker = `{{${key}}}`;
-        if (text.includes(marker)) replacementCount += text.split(marker).length - 1;
-        text = text.replaceAll(marker, escapeXml(value));
-      });
-      zip.file(file.name, text);
+      const text = await file.async("string");
+      const result = replacePlaceholders(text, replacements);
+      replacementCount += result.replacementCount;
+      zip.file(file.name, result.text);
     }),
   );
 

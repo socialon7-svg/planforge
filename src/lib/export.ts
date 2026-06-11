@@ -12,7 +12,7 @@ export function planToMarkdown(plan: GeneratedPlan): string {
     .map((item) => `- ${item.label}: ${item.status} - ${item.comment}`)
     .join("\n");
 
-  return `# PSST Business Plan Draft\n\n${sections.join("\n\n")}\n\n## Self Diagnosis\n\n${diagnosis}\n`;
+  return `# PSST \uC0AC\uC5C5\uACC4\uD68D\uC11C \uCD08\uC548\n\n${sections.join("\n\n")}\n\n## \uC790\uAC00\uC9C4\uB2E8\n\n${diagnosis}\n`;
 }
 
 export function planToPlainText(plan: GeneratedPlan): string {

@@ -11,23 +11,17 @@ const diagnosisLabels = [
 ];
 
 export function normalizeDiagnosis(plan: GeneratedPlan): GeneratedPlan {
-  const existing = new Map(plan.selfDiagnosis?.map((item) => [item.label, item]));
   const items = plan.selfDiagnosis?.length ? plan.selfDiagnosis : [];
 
   return {
     ...plan,
-    selfDiagnosis:
-      items.length >= 7
-        ? items.slice(0, 7)
-        : diagnosisLabels.map((label) => {
-            const item = existing.get(label);
-            return (
-              item ?? {
-                label,
-                status: "warning",
-                comment: "Review needed.",
-              }
-            );
-          }),
+    selfDiagnosis: diagnosisLabels.map((label, index) => {
+      const item = items[index];
+      return {
+        label,
+        status: item?.status ?? "warning",
+        comment: item?.comment ?? "Review needed.",
+      };
+    }),
   };
 }

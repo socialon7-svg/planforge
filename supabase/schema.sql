@@ -31,6 +31,29 @@ create index if not exists business_plan_chunks_embedding_idx
   using ivfflat (embedding vector_cosine_ops)
   with (lists = 100);
 
+alter table public.business_plan_chunks enable row level security;
+
+drop policy if exists "service role can manage chunks" on public.business_plan_chunks;
+create policy "service role can manage chunks"
+  on public.business_plan_chunks
+  for all
+  using (auth.role() = 'service_role')
+  with check (auth.role() = 'service_role');
+
+create or replace view public.business_plan_chunk_public as
+  select
+    id,
+    chunk_id,
+    program_type,
+    industry,
+    section,
+    content,
+    purpose,
+    tags,
+    reusable_logic,
+    created_at
+  from public.business_plan_chunks;
+
 create or replace function public.match_business_plan_chunks(
   query_embedding vector(1536),
   match_count int default 8,
