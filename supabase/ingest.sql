@@ -1,0 +1,4 @@
+-- MVP uses local JSONL search in src/lib/rag.ts.
+-- For pgvector migration, load data/rag_chunks_redacted.jsonl with an ingest script,
+-- generate embeddings server-side, then insert into public.business_plan_chunks.
+-- Never expose source_file, page_range, or raw content in the user UI.

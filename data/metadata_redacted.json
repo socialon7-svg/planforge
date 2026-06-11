@@ -1,0 +1,203 @@
+{
+  "dataset_name": "prestartup_business_plan_rag_redacted_v1",
+  "created_at": "2026-06-11T13:26:38.525139Z",
+  "source_count": 20,
+  "chunk_count": 240,
+  "program_types": [
+    "예비창업패키지"
+  ],
+  "sections": [
+    "Basic Info",
+    "Item Summary",
+    "Problem",
+    "Solution",
+    "Market",
+    "Competitor",
+    "Business Model",
+    "Scale-up",
+    "Budget",
+    "Roadmap",
+    "Team",
+    "Partners"
+  ],
+  "privacy_preprocessing": {
+    "removed_or_generalized": [
+      "raw filenames containing personal names",
+      "representative/applicant/team member names",
+      "school names, workplace names, exact organization names when not essential",
+      "contact details, addresses, birth dates, gender information if present",
+      "overly specific career details that could identify a person"
+    ],
+    "kept": [
+      "non-personal item theme",
+      "industry/category",
+      "program type",
+      "generalized output goals",
+      "generalized roles and partner types",
+      "paraphrased business logic"
+    ],
+    "copy_policy": "No original sentences are intended for direct reuse. Use chunks as logic patterns and rewrite with fresh evidence for new ideas."
+  },
+  "plans": [
+    {
+      "plan_id": "plan_001",
+      "source_file": "plan_001.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "농업/스마트팜",
+      "item_theme": "노지형 농업용 AI 스마트 관수 스프링클러",
+      "output_goal": "스마트 스프링클러 시제품과 모바일 앱 MVP"
+    },
+    {
+      "plan_id": "plan_002",
+      "source_file": "plan_002.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "반려동물/친환경 소재",
+      "item_theme": "커피박 바이오차 기반 고양이 배변 모래",
+      "output_goal": "친환경 배변 모래 1종 출시"
+    },
+    {
+      "plan_id": "plan_003",
+      "source_file": "plan_003.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "소프트웨어/시스템 성능",
+      "item_theme": "고성능 메모리 할당기 소프트웨어 원천기술",
+      "output_goal": "국내외 특허 출원 및 빅테크 성능 검증 협의"
+    },
+    {
+      "plan_id": "plan_004",
+      "source_file": "plan_004.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "해양/친환경 화학소재",
+      "item_theme": "낙엽 추출물 기반 친환경 선박 방오도료",
+      "output_goal": "시제품, 실해역 침지시험, 특허 및 공인시험 성적 확보"
+    },
+    {
+      "plan_id": "plan_005",
+      "source_file": "plan_005.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "유아용품/수면케어",
+      "item_theme": "유아 수면장애 개선용 모듈형 중량침구 세트",
+      "output_goal": "시제품 3세트와 홍보용 웹사이트"
+    },
+    {
+      "plan_id": "plan_006",
+      "source_file": "plan_006.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "여행/위치기반 서비스",
+      "item_theme": "패키지 여행객 위치기반 서포트 웹·앱 서비스",
+      "output_goal": "모바일 앱과 웹사이트 MVP"
+    },
+    {
+      "plan_id": "plan_007",
+      "source_file": "plan_007.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "음악/AI SaaS",
+      "item_theme": "AI 악보 스캔·조옮김 모바일 서비스",
+      "output_goal": "모바일 애플리케이션 MVP"
+    },
+    {
+      "plan_id": "plan_008",
+      "source_file": "plan_008.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "패션/업사이클 커머스",
+      "item_theme": "소파 자투리 가죽 업사이클 패션잡화 브랜드",
+      "output_goal": "카드지갑·미니백 등 제품 라인 출시와 판매 채널 구축"
+    },
+    {
+      "plan_id": "plan_009",
+      "source_file": "plan_009.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "AI/맞춤형 굿즈 제조",
+      "item_theme": "AI 초상화·의상 커스텀 기반 맞춤형 우드트로피 굿즈",
+      "output_goal": "웹사이트, 최종생산품, AI 스타일 변형 및 제조 최적화 특허"
+    },
+    {
+      "plan_id": "plan_010",
+      "source_file": "plan_010.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "로봇부품/정밀기계",
+      "item_theme": "다중 감속비 지원 하모닉 드라이브",
+      "output_goal": "다중 감속비 하모닉 드라이브 시제품"
+    },
+    {
+      "plan_id": "plan_011",
+      "source_file": "plan_011.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "바이오/진단키트",
+      "item_theme": "수산물 유통·외식업용 식중독균 신속 자가 검사 키트",
+      "output_goal": "LAMP 기반 핵심기술 출원, 시제품, 성능평가, B2B MOU"
+    },
+    {
+      "plan_id": "plan_012",
+      "source_file": "plan_012.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "뷰티/천연소재",
+      "item_theme": "천연추출물 기반 피부취약자용 맞춤형 화장품",
+      "output_goal": "피부취약자용 화장품 시제품 1개"
+    },
+    {
+      "plan_id": "plan_013",
+      "source_file": "plan_013.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "AI/리서치 자동화 SaaS",
+      "item_theme": "AutoML 기반 서베이 분석 및 보고서 자동화 Bot",
+      "output_goal": "웹사이트와 자동 분석 알고리즘 2개"
+    },
+    {
+      "plan_id": "plan_014",
+      "source_file": "plan_014.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "주거복지/AI 플랫폼",
+      "item_theme": "고령자 맞춤형 주택 리모델링 AI 플랫폼",
+      "output_goal": "모바일 앱, 웹사이트, 홍보물"
+    },
+    {
+      "plan_id": "plan_015",
+      "source_file": "plan_015.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "신발 제조/플랫폼",
+      "item_theme": "그래픽 커스터마이징·소량생산 신발 제작 플랫폼",
+      "output_goal": "웹 플랫폼, 모바일 앱, 신발 샘플 20스타일"
+    },
+    {
+      "plan_id": "plan_016",
+      "source_file": "plan_016.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "디지털 헬스케어/로봇",
+      "item_theme": "비전·대화형 AI 기반 호흡재활 코칭로봇",
+      "output_goal": "로봇 플랫폼 2대와 호흡재활 프로그램 2건"
+    },
+    {
+      "plan_id": "plan_017",
+      "source_file": "plan_017.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "에듀테크/융합교육 교구",
+      "item_theme": "목공과 에듀테크가 융합된 STEAM 목공 키트",
+      "output_goal": "목공 융합교육 키트·리필키트·디지털 융합키트 시제품 및 판매제품"
+    },
+    {
+      "plan_id": "plan_018",
+      "source_file": "plan_018.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "특수교육/AI 교육",
+      "item_theme": "경계선 아동 인지·사회성 발달 체험형 디지털 학습 서비스",
+      "output_goal": "디지털 교구 학습 프로그램, 장비, 교육 결과 리포트, 영업활동 결과"
+    },
+    {
+      "plan_id": "plan_019",
+      "source_file": "plan_019.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "레저/위치기반 커뮤니티",
+      "item_theme": "프리다이빙 버디 매칭 플랫폼",
+      "output_goal": "버디 매칭 모바일 애플리케이션"
+    },
+    {
+      "plan_id": "plan_020",
+      "source_file": "plan_020.pdf",
+      "program_type": "예비창업패키지",
+      "industry": "패션/O2O 플랫폼",
+      "item_theme": "동네 수선집 중개 O2O 플랫폼",
+      "output_goal": "모바일 앱과 웹사이트 MVP"
+    }
+  ]
+}
