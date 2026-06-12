@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "jsonrepair": "^3.14.0",
     "jszip": "^3.10.1",
     "next": "16.2.9",
     "openai": "^6.42.0",
