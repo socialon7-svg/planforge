@@ -10,6 +10,7 @@ const placeholderPattern = /\{\{[A-Z_]+\}\}/g;
 const replacementPattern = /\{\{([A-Z_]+)\}\}/g;
 const diagnosisHeading = "\uC790\uAC00\uC9C4\uB2E8";
 const tableWidth = 48188;
+const hwpCharUnit = 950;
 
 type GeneratedBlock =
   | { kind: "paragraph"; text: string; heading?: boolean }
@@ -27,6 +28,181 @@ function escapeXml(value: string): string {
 
 function textToHwpxText(value: string): string {
   return escapeXml(value.replace(/\r?\n/g, " "));
+}
+
+function attrNumber(attrs: string, name: string, fallback: number): number {
+  const match = attrs.match(new RegExp(`${name}="(\\d+)"`));
+  return match?.[1] ? Number.parseInt(match[1], 10) : fallback;
+}
+
+function plainHwpxText(value: string): string {
+  return value
+    .replace(/<hp:lineBreak\s*\/>/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function paragraphVisibleText(paragraphXml: string): string {
+  return plainHwpxText(
+    [...paragraphXml.matchAll(/<hp:t>([\s\S]*?)<\/hp:t>/g)].map((match) => match[1]).join(" "),
+  );
+}
+
+function paragraphLineSegments(paragraphXml: string, text: string): string | null {
+  const lineMatches = [...paragraphXml.matchAll(/<hp:lineseg\b([^>]*)\/>/g)];
+  if (lineMatches.length === 0) return null;
+
+  const first = lineMatches[0][1];
+  const second = lineMatches[1]?.[1];
+  const horzsize = attrNumber(first, "horzsize", tableWidth);
+  const vertsize = attrNumber(first, "vertsize", 1200);
+  const textheight = attrNumber(first, "textheight", vertsize);
+  const baseline = attrNumber(first, "baseline", Math.round(textheight * 0.85));
+  const spacing = attrNumber(first, "spacing", Math.round(textheight * 0.35));
+  const firstFlags = attrNumber(first, "flags", 393216);
+  const nextFlags = second ? attrNumber(second, "flags", 1441792) : 1441792;
+  const charsPerLine = Math.max(6, Math.floor(horzsize / hwpCharUnit));
+  const textLength = Math.max(1, Array.from(text).length);
+  const lineCount = Math.max(1, Math.ceil(textLength / charsPerLine));
+  const lineStep = vertsize + spacing;
+
+  const lines = Array.from({ length: lineCount }, (_, index) => {
+    const textpos = index * charsPerLine;
+    const vertpos = index * lineStep;
+    const flags = index === 0 ? firstFlags : nextFlags;
+    return `<hp:lineseg textpos="${textpos}" vertpos="${vertpos}" vertsize="${vertsize}" textheight="${textheight}" baseline="${baseline}" spacing="${spacing}" horzpos="0" horzsize="${horzsize}" flags="${flags}"/>`;
+  }).join("");
+
+  return `<hp:linesegarray>${lines}</hp:linesegarray>`;
+}
+
+function normalizeParagraphLayout(paragraphXml: string): string {
+  const text = paragraphVisibleText(paragraphXml);
+  if (!text) return paragraphXml;
+
+  const lineSegments = paragraphLineSegments(paragraphXml, text);
+  if (!lineSegments) return paragraphXml;
+
+  let normalized = paragraphXml.replace(/<hp:linesegarray>[\s\S]*?<\/hp:linesegarray>/, lineSegments);
+  if (Array.from(text).length > 20) {
+    normalized = normalized.replace(/<hp:run\b([^>]*?)charPrIDRef="\d+"/g, '<hp:run$1charPrIDRef="29"');
+  }
+  return normalized;
+}
+
+function paragraphRanges(sectionXml: string): Array<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = [];
+  const stack: number[] = [];
+  const tokenPattern = /<hp:p\b[^>]*>|<\/hp:p>/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = tokenPattern.exec(sectionXml))) {
+    if (match[0].startsWith("<hp:p")) {
+      stack.push(match.index);
+    } else {
+      const start = stack.pop();
+      if (start !== undefined) {
+        ranges.push({ start, end: match.index + match[0].length });
+      }
+    }
+  }
+
+  return ranges;
+}
+
+function elementRanges(xml: string, tagName: string): Array<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = [];
+  const stack: number[] = [];
+  const tokenPattern = new RegExp(`<${tagName}\\b[^>]*>|<\\/${tagName}>`, "g");
+  let match: RegExpExecArray | null;
+
+  while ((match = tokenPattern.exec(xml))) {
+    if (match[0].startsWith(`<${tagName}`)) {
+      stack.push(match.index);
+    } else {
+      const start = stack.pop();
+      if (start !== undefined) {
+        ranges.push({ start, end: match.index + match[0].length });
+      }
+    }
+  }
+
+  return ranges;
+}
+
+function normalizeLeafParagraphLayouts(sectionXml: string): string {
+  const ranges = paragraphRanges(sectionXml)
+    .filter(({ start, end }) => {
+      const paragraphXml = sectionXml.slice(start, end);
+      const body = paragraphXml.slice(paragraphXml.indexOf(">") + 1, -"</hp:p>".length);
+      return !body.includes("<hp:p") && paragraphXml.includes("<hp:t>");
+    })
+    .sort((a, b) => b.start - a.start);
+
+  let normalized = sectionXml;
+  ranges.forEach(({ start, end }) => {
+    const paragraphXml = normalized.slice(start, end);
+    normalized = `${normalized.slice(0, start)}${normalizeParagraphLayout(paragraphXml)}${normalized.slice(end)}`;
+  });
+
+  return normalized;
+}
+
+function requiredCellHeight(cellXml: string): number {
+  const originalHeight = attrNumber(cellXml.match(/<hp:cellSz\b([^>]*)\/>/)?.[1] ?? "", "height", 1500);
+  const lineBottoms = [...cellXml.matchAll(/<hp:lineseg\b([^>]*)\/>/g)].map((match) => {
+    const attrs = match[1];
+    return (
+      attrNumber(attrs, "vertpos", 0) +
+      attrNumber(attrs, "vertsize", 1000) +
+      attrNumber(attrs, "spacing", 400) +
+      600
+    );
+  });
+  return Math.min(18000, Math.max(originalHeight, ...lineBottoms, 1500));
+}
+
+function setCellHeight(cellXml: string, height: number): string {
+  return cellXml.replace(/(<hp:cellSz\b[^>]*\bheight=")\d+("[^>]*\/>)/, `$1${height}$2`);
+}
+
+function normalizeSingleTableHeights(tableXml: string): string {
+  const rowHeights: number[] = [];
+  const tableWithRows = tableXml.replace(/<hp:tr\b[^>]*>[\s\S]*?<\/hp:tr>/g, (rowXml) => {
+    const cells = [...rowXml.matchAll(/<hp:tc\b[\s\S]*?<\/hp:tc>/g)].map((match) => match[0]);
+    const rowHeight = Math.max(...cells.map(requiredCellHeight), 1500);
+    rowHeights.push(rowHeight);
+    return rowXml.replace(/<hp:tc\b[\s\S]*?<\/hp:tc>/g, (cellXml) => setCellHeight(cellXml, rowHeight));
+  });
+  const tableHeight = rowHeights.reduce((sum, rowHeight) => sum + rowHeight, 0);
+  return tableWithRows.replace(/(<hp:sz\b[^>]*\bheight=")\d+("[^>]*\/>)/, `$1${tableHeight}$2`);
+}
+
+function normalizeTableHeights(sectionXml: string): string {
+  const ranges = elementRanges(sectionXml, "hp:tbl")
+    .filter(({ start, end }) => {
+      const tableXml = sectionXml.slice(start, end);
+      const body = tableXml.slice(tableXml.indexOf(">") + 1, -"</hp:tbl>".length);
+      return !body.includes("<hp:tbl");
+    })
+    .sort((a, b) => b.start - a.start);
+
+  let normalized = sectionXml;
+  ranges.forEach(({ start, end }) => {
+    const tableXml = normalized.slice(start, end);
+    normalized = `${normalized.slice(0, start)}${normalizeSingleTableHeights(tableXml)}${normalized.slice(end)}`;
+  });
+
+  return normalized;
+}
+
+function normalizeHwpxLayout(sectionXml: string): string {
+  return normalizeTableHeights(normalizeLeafParagraphLayouts(sectionXml));
 }
 
 function placeholderMap(plan: GeneratedPlan): Record<string, string> {
@@ -209,59 +385,59 @@ function makeTemplateTextReplacements(plan: GeneratedPlan): Map<number, string> 
 
   setTemplateReplacement(replacements, 3, itemName, 90);
   setTemplateReplacement(replacements, 5, category, 90);
-  setTemplateReplacement(replacements, 7, plan.itemSummary.body, 300);
-  setTemplateReplacement(replacements, 8, `목표 산출물: ${outputs}`, 160);
-  setTemplateReplacement(replacements, 10, `${plan.problem.body}\n${plan.market.body}`, 320);
-  setTemplateReplacement(replacements, 12, plan.solution.body, 280);
-  setTemplateReplacement(replacements, 13, plan.competitor.body, 220);
-  setTemplateReplacement(replacements, 15, `${plan.businessModel.body}\n${plan.scaleUp.body}`, 320);
-  setTemplateReplacement(replacements, 17, `${plan.team.body}\n${plan.partners.body}`, 260);
+  setTemplateReplacement(replacements, 7, plan.itemSummary.body, 150);
+  setTemplateReplacement(replacements, 8, `목표 산출물: ${outputs}`, 90);
+  setTemplateReplacement(replacements, 10, `${plan.problem.body}\n${plan.market.body}`, 150);
+  setTemplateReplacement(replacements, 12, plan.solution.body, 150);
+  setTemplateReplacement(replacements, 13, plan.competitor.body, 130);
+  setTemplateReplacement(replacements, 15, `${plan.businessModel.body}\n${plan.scaleUp.body}`, 150);
+  setTemplateReplacement(replacements, 17, `${plan.team.body}\n${plan.partners.body}`, 130);
   setTemplateReplacement(replacements, 19, "MVP 화면, 서비스 흐름도, 고객 사용 장면은 별도 이미지로 삽입 예정입니다.", 95);
   setTemplateReplacement(replacements, 20, "제품·서비스 구조도 또는 검증 화면 이미지를 삽입할 수 있습니다.", 95);
   setTemplateReplacement(replacements, 21, "MVP 화면 또는 서비스 흐름도", 70);
   setTemplateReplacement(replacements, 22, "제품·서비스 구조도", 70);
 
-  setTemplateReplacement(replacements, 25, `${plan.problem.body}\n${plan.market.body}`, 380);
-  setTemplateRows(replacements, [26, 27, 28, 29, 30, 31], problemSegments, 170);
+  setTemplateReplacement(replacements, 25, `${plan.problem.body}\n${plan.market.body}`, 220);
+  setTemplateRows(replacements, [26, 27, 28, 29, 30, 31], problemSegments, 120);
 
-  setTemplateReplacement(replacements, 34, `${plan.solution.body}\n${plan.budget.body}`, 380);
+  setTemplateReplacement(replacements, 34, `${plan.solution.body}\n${plan.budget.body}`, 220);
   setTemplateRows(
     replacements,
     [35, 36, 37, 38, 39],
     [...solutionSegments.slice(0, 3), budgetSegments[0], competitorSegments[0]],
-    170,
+    120,
   );
 
   setTemplateRows(replacements, [48, 52, 56, 60], ["MVP 핵심 기능 개발", "고객 검증 및 파일럿", "개선·고도화", "시제품 완성 및 사업화 준비"], 80);
   setTemplateRows(replacements, [49, 53, 57, 61], ["협약 1~2개월", "협약 3~4개월", "협약 5개월", "협약기간 말"], 50);
-  setTemplateRows(replacements, [50, 54, 58, 62], roadmapSegments.slice(0, 4), 150);
+  setTemplateRows(replacements, [50, 54, 58, 62], roadmapSegments.slice(0, 4), 110);
 
-  setTemplateReplacement(replacements, 65, `1단계 정부지원사업비는 ${totalBudget} 기준으로 MVP 개발, 고객 검증, 사업화 자료 제작 산출물과 직접 연결되도록 집행합니다.`, 170);
+  setTemplateReplacement(replacements, 65, `1단계 정부지원사업비는 ${totalBudget} 기준으로 MVP 개발, 고객 검증, 사업화 자료 제작 산출물과 직접 연결되도록 집행합니다.`, 120);
   setTemplateRows(replacements, [69, 74, 77], ["개발비", "실증·외주용역비", "사업화비"], 50);
-  setTemplateRows(replacements, [70, 72, 75, 78], budgetSegments.slice(0, 4), 150);
+  setTemplateRows(replacements, [70, 72, 75, 78], budgetSegments.slice(0, 4), 105);
   setTemplateRows(replacements, [71, 73, 76, 79], amounts, 55);
   setTemplateReplacement(replacements, 82, totalBudget, 55);
 
-  setTemplateReplacement(replacements, 84, `2단계 사업비는 1단계 검증 결과를 근거로 기능 고도화, 유료 고객 전환, 파트너십 확장, 시장진입 자료 제작에 배분합니다.`, 170);
+  setTemplateReplacement(replacements, 84, `2단계 사업비는 1단계 검증 결과를 근거로 기능 고도화, 유료 고객 전환, 파트너십 확장, 시장진입 자료 제작에 배분합니다.`, 120);
   setTemplateRows(replacements, [88, 93, 96], ["고도화 개발비", "검증·외주용역비", "시장진입비"], 50);
-  setTemplateRows(replacements, [89, 91, 94, 97], budgetSegments.slice(2, 6), 150);
+  setTemplateRows(replacements, [89, 91, 94, 97], budgetSegments.slice(2, 6), 105);
   setTemplateRows(replacements, [90, 92, 95, 98], amounts, 55);
   setTemplateReplacement(replacements, 101, "추가 검증 후 확정", 55);
 
-  setTemplateReplacement(replacements, 104, `${plan.competitor.body}\n${plan.scaleUp.body}`, 320);
-  setTemplateReplacement(replacements, 105, plan.businessModel.body, 280);
-  setTemplateReplacement(replacements, 106, plan.roadmap.body, 260);
-  setTemplateReplacement(replacements, 107, "환경·사회적 가치는 고객 검증 후 정량 지표를 추가 검증 필요 항목으로 관리하고, 실제 절감 효과가 확인된 범위에서만 제시합니다.", 160);
-  setTemplateReplacement(replacements, 108, "초기 고객과 협력기관의 피드백을 반영해 서비스 접근성, 사용성, 운영 프로세스를 개선하고 반복 적용 가능한 도입 절차를 정리합니다.", 160);
-  setTemplateReplacement(replacements, 109, "개인정보와 고객 데이터를 최소 수집하고 운영 기준을 문서화하여, 사업화 과정에서 신뢰성과 관리 체계를 함께 확보합니다.", 160);
-  setTemplateRows(replacements, [110, 111, 112, 113, 114, 115], businessSegments, 165);
+  setTemplateReplacement(replacements, 104, `${plan.competitor.body}\n${plan.scaleUp.body}`, 220);
+  setTemplateReplacement(replacements, 105, plan.businessModel.body, 190);
+  setTemplateReplacement(replacements, 106, plan.roadmap.body, 180);
+  setTemplateReplacement(replacements, 107, "환경·사회적 가치는 고객 검증 후 정량 지표를 추가 검증 필요 항목으로 관리합니다.", 105);
+  setTemplateReplacement(replacements, 108, "초기 고객과 협력기관의 피드백을 반영해 서비스 접근성, 사용성, 운영 프로세스를 개선합니다.", 105);
+  setTemplateReplacement(replacements, 109, "개인정보와 고객 데이터를 최소 수집하고 운영 기준을 문서화하여 신뢰성과 관리 체계를 확보합니다.", 105);
+  setTemplateRows(replacements, [110, 111, 112, 113, 114, 115], businessSegments, 115);
 
   setTemplateRows(replacements, [124, 128, 132, 136], ["MVP 설계 및 프로토타입", "파일럿 운영", "유료 베타 전환", "시장 확대 및 파트너십"], 80);
   setTemplateRows(replacements, [125, 129, 133, 137], ["1년차 상반기", "1년차 하반기", "2년차", "3년차"], 50);
-  setTemplateRows(replacements, [126, 130, 134, 138], roadmapSegments.slice(4, 8), 150);
+  setTemplateRows(replacements, [126, 130, 134, 138], roadmapSegments.slice(4, 8), 110);
 
   setTemplateReplacement(replacements, 16, "팀 구성\n(Team)", 40);
-  setTemplateReplacement(replacements, 17, teamSegments.join(" "), 260);
+  setTemplateReplacement(replacements, 17, teamSegments.join(" "), 130);
 
   return replacements;
 }
@@ -282,7 +458,7 @@ function fillOfficialTemplateSectionXml(sectionXml: string, plan: GeneratedPlan)
     throw new Error("The HWPX template structure did not match the expected PSST form.");
   }
 
-  return filled;
+  return normalizeHwpxLayout(filled);
 }
 
 async function assertHwpxIntegrity(zip: JSZip): Promise<void> {
