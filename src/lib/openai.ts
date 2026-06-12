@@ -229,7 +229,7 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
   const provider = selectedProvider();
 
   try {
-    return provider === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input);
+    return await (provider === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input));
   } catch (error) {
     const fallback = fallbackProvider();
     if (!fallback || fallback === provider || !shouldTryFallbackProvider(error)) {
