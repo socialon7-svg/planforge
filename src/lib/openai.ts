@@ -7,6 +7,7 @@ import { generatedPlanSchema } from "@/lib/schema";
 import { normalizeDiagnosis } from "@/lib/diagnosis";
 import { generateLocalFallbackPlan } from "@/lib/local-plan";
 import { ensurePlanDepth } from "@/lib/plan-depth";
+import { sanitizeGeneratedPlan } from "@/lib/privacy";
 
 let cachedOpenAiClient: OpenAI | null = null;
 let cachedNvidiaClient: OpenAI | null = null;
@@ -158,6 +159,10 @@ function extractJsonContent(content: string): string {
   return trimmed;
 }
 
+function finalizeGeneratedPlan(plan: GeneratedPlan, input: IdeaInput): GeneratedPlan {
+  return sanitizeGeneratedPlan(ensurePlanDepth(plan, input));
+}
+
 async function generateWithOpenAI(input: IdeaInput): Promise<GeneratedPlan> {
   const client = openaiClient();
   const ragContext = buildRagContext(input);
@@ -174,7 +179,7 @@ async function generateWithOpenAI(input: IdeaInput): Promise<GeneratedPlan> {
   });
 
   const content = response.choices[0]?.message.content;
-  return ensurePlanDepth(parseGeneratedPlan(content ?? ""), input);
+  return finalizeGeneratedPlan(parseGeneratedPlan(content ?? ""), input);
 }
 
 async function generateWithNvidia(input: IdeaInput): Promise<GeneratedPlan> {
@@ -192,7 +197,7 @@ async function generateWithNvidia(input: IdeaInput): Promise<GeneratedPlan> {
   });
 
   const content = response.choices[0]?.message.content;
-  return ensurePlanDepth(parseGeneratedPlan(content ?? ""), input);
+  return finalizeGeneratedPlan(parseGeneratedPlan(content ?? ""), input);
 }
 
 async function generateWithGemini(input: IdeaInput): Promise<GeneratedPlan> {
@@ -272,7 +277,7 @@ async function requestGeminiPlan({
         .join("")
         .trim() ?? "";
 
-    return ensurePlanDepth(parseGeneratedPlan(content), input);
+    return finalizeGeneratedPlan(parseGeneratedPlan(content), input);
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("AI \uC751\uB2F5 \uC2DC\uAC04\uC774 \uCD08\uACFC\uB410\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694.");
@@ -293,7 +298,7 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
     const primaryRecoverable = isRecoverableAiError(error);
     if (!fallback || fallback === provider || !primaryRecoverable) {
       if (localDraftFallbackEnabled() && primaryRecoverable) {
-        return ensurePlanDepth(generateLocalFallbackPlan(input), input);
+        return finalizeGeneratedPlan(generateLocalFallbackPlan(input), input);
       }
       throw error;
     }
@@ -302,7 +307,7 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
       return await generateWithProvider(fallback, input);
     } catch (fallbackError) {
       if (localDraftFallbackEnabled() && (primaryRecoverable || isRecoverableAiError(fallbackError))) {
-        return ensurePlanDepth(generateLocalFallbackPlan(input), input);
+        return finalizeGeneratedPlan(generateLocalFallbackPlan(input), input);
       }
       throw fallbackError;
     }

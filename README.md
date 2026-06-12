@@ -21,9 +21,10 @@ Vercel project:
 - Copy all and copy section
 - JSON, Markdown, and HWPX download
 - HWPX template status check
-- HWPX export that either replaces placeholders or generates a PSST-style HWPX body when placeholders are missing
+- HWPX export that replaces placeholders when available, or safely fills the official PSST template structure when placeholders are missing
 - Sample input button for quick testing
 - Self-diagnosis checklist
+- High-confidence privacy masking for generated/exported plans
 - Supabase pgvector schema for future migration
 
 ## Privacy Rules
@@ -79,7 +80,8 @@ src/lib/rag.ts          Local JSONL RAG loader and keyword search
 src/lib/openai.ts       AI provider calls for NVIDIA NIM, OpenAI, and Gemini
 src/lib/prompt.ts       Prompt builder
 src/lib/export.ts       JSON/Markdown/plain-text helpers
-src/lib/hwpx.ts         HWPX placeholder replacement
+src/lib/hwpx.ts         HWPX template fill and integrity checks
+src/lib/privacy.ts      High-confidence privacy masking
 src/types               Shared TypeScript types
 data                    Redacted RAG dataset files
 templates               official_template.hwpx
@@ -106,7 +108,7 @@ Place these placeholders in `templates/official_template.hwpx` to enable replace
 {{PARTNERS}}
 ```
 
-The currently provided template is available, but it does not contain supported placeholders yet. The app detects this and falls back to generating a PSST-style HWPX body from the draft.
+The currently provided template is available, but it does not contain supported placeholders yet. The app detects this and fills the existing PSST form structure while preserving the official template tables, paragraphs, and layout metadata. If placeholders are added later, they should be kept inside a single text run in the HWPX editor so replacement stays reliable.
 
 ## PDF Template Pattern Source
 
@@ -121,15 +123,17 @@ The user-provided PDF plans are processed locally with anonymized temporary file
 - Editable result UI
 - JSON, Markdown, and HWPX download
 - HWPX placeholder detection API: `/api/templates/hwpx/status`
-- Placeholder-free generated HWPX export
+- Placeholder-free official-template HWPX export
+- Generated/exported plan privacy masking and HWPX integrity checks
 - Anonymized PDF-derived PSST template pattern metadata
 - README, AGENTS, `.env.example`, Supabase schema
 
 ## TODO
 
 - Implement Supabase ingest script and embedding search
-- Add placeholders to the official HWPX template if not already present
-- Add automated quality checks for generated drafts
+- Add placeholder-based row cloning for team, budget, roadmap, and competitor tables
+- Add PDF preview and page-budget checks
+- Add image slot upload and deterministic insertion
 - Add external market-stat source verification
 - Add per-section regeneration
 - Add temporary draft persistence

@@ -285,6 +285,21 @@ function fillOfficialTemplateSectionXml(sectionXml: string, plan: GeneratedPlan)
   return filled;
 }
 
+async function assertHwpxIntegrity(zip: JSZip): Promise<void> {
+  await Promise.all(
+    Object.values(zip.files).map(async (file) => {
+      if (file.dir || !/\.(xml|txt|hpf|rdf)$/i.test(file.name)) return;
+      const text = await file.async("string");
+      if ((text.match(placeholderPattern) ?? []).length > 0) {
+        throw new Error(`HWPX export still contains unresolved placeholders in ${file.name}.`);
+      }
+      if (/(source_file|chunk_id|page_range|[^\s<>"']+\.pdf)/i.test(text)) {
+        throw new Error(`HWPX export contains blocked source metadata in ${file.name}.`);
+      }
+    }),
+  );
+}
+
 function tableBlock(rows: string[][], widths?: number[], headerRows = 1): GeneratedBlock {
   return { kind: "table", rows, widths, headerRows };
 }
@@ -527,6 +542,7 @@ export async function createHwpxFromTemplate(plan: GeneratedPlan): Promise<Buffe
   }
 
   zip.file("Preview/PrvText.txt", generatedPlanLines(plan).join("\r\n"));
+  await assertHwpxIntegrity(zip);
 
   return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
 }

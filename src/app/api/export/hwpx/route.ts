@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { createHwpxFromTemplate, hasHwpxTemplate } from "@/lib/hwpx";
 import { generatedPlanSchema } from "@/lib/schema";
+import { sanitizeGeneratedPlan } from "@/lib/privacy";
 import type { GeneratedPlan } from "@/types/plan";
 
 export const runtime = "nodejs";
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const plan = generatedPlanSchema.parse((body as { plan?: unknown }).plan) as GeneratedPlan;
+    const plan = sanitizeGeneratedPlan(generatedPlanSchema.parse((body as { plan?: unknown }).plan) as GeneratedPlan);
     const buffer = await createHwpxFromTemplate(plan);
     const bytes = new Uint8Array(buffer);
 
