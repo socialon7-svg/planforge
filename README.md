@@ -16,7 +16,7 @@ Vercel project:
 - Landing page with CTA
 - Startup idea input form
 - Local JSONL RAG loader and search
-- OpenAI JSON generation API
+- OpenAI or Gemini JSON generation API
 - 12 editable result sections
 - Copy all and copy section
 - JSON, Markdown, and HWPX download
@@ -39,11 +39,16 @@ cp .env.example .env.local
 Set:
 
 ```bash
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-2.5-flash
+
+# Or use OpenAI instead
 OPENAI_API_KEY=sk-your-api-key
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
-Production also requires `OPENAI_API_KEY` in Vercel project environment variables. Without it, the UI loads but AI generation cannot run.
+Production requires the matching provider key in Vercel project environment variables. For Gemini, set `AI_PROVIDER=gemini`, `GEMINI_API_KEY`, and optionally `GEMINI_MODEL`. Without a configured provider key, the UI loads but AI generation cannot run.
 
 Run locally:
 
@@ -66,7 +71,7 @@ npm.cmd run build
 src/app                 App Router pages and API routes
 src/components          Client UI
 src/lib/rag.ts          Local JSONL RAG loader and keyword search
-src/lib/openai.ts       OpenAI API call
+src/lib/openai.ts       AI provider calls for OpenAI and Gemini
 src/lib/prompt.ts       Prompt builder
 src/lib/export.ts       JSON/Markdown/plain-text helpers
 src/lib/hwpx.ts         HWPX placeholder replacement
@@ -106,7 +111,7 @@ The user-provided PDF plans are processed locally with anonymized temporary file
 
 - Runnable Next.js MVP
 - Local RAG search with keyword overlap, section weight, and tag match
-- OpenAI generation route
+- OpenAI/Gemini generation route
 - Strong privacy and anti-copy prompt rules
 - Editable result UI
 - JSON, Markdown, and HWPX download

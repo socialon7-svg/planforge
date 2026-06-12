@@ -61,7 +61,8 @@ export async function POST(request: Request) {
 
     const message = error instanceof Error ? error.message : "\uC0DD\uC131\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.";
     const upstreamStatus = typeof (error as { status?: unknown }).status === "number" ? (error as { status: number }).status : undefined;
-    const status = message.includes("OPENAI_API_KEY") ? 500 : upstreamStatus === 429 ? 429 : 400;
+    const missingKey = message.includes("OPENAI_API_KEY") || message.includes("GEMINI_API_KEY");
+    const status = missingKey ? 500 : upstreamStatus && upstreamStatus >= 400 && upstreamStatus < 500 ? upstreamStatus : 400;
     return NextResponse.json({ error: message }, { status });
   }
 }
