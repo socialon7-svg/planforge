@@ -25,11 +25,29 @@ type GeminiResponse = {
   };
 };
 
+type GeminiApiError = Error & { status?: number };
+
 function selectedProvider(): AiProvider {
   const configured = process.env.AI_PROVIDER?.toLowerCase();
   if (configured === "gemini" || configured === "openai") return configured;
   if (process.env.GEMINI_API_KEY) return "gemini";
   return "openai";
+}
+
+function geminiModelCandidates(): string[] {
+  const configured = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+  const fallbackModels = process.env.GEMINI_FALLBACK_MODELS ?? "gemini-2.0-flash,gemini-2.0-flash-lite";
+  return [...configured.split(","), ...fallbackModels.split(",")]
+    .map((model) => model.trim().replace(/^models\//, ""))
+    .filter(Boolean)
+    .filter((model, index, models) => models.indexOf(model) === index);
+}
+
+function shouldTryNextGeminiModel(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const status = (error as GeminiApiError).status;
+  const message = error.message.toLowerCase();
+  return status === 429 || status === 503 || (status === 400 && message.includes("high demand"));
 }
 
 function openaiClient(): OpenAI {
@@ -87,8 +105,32 @@ async function generateWithGemini(input: IdeaInput): Promise<GeneratedPlan> {
   }
 
   const ragContext = buildRagContext(input);
-  const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
-  const modelPath = model.replace(/^models\//, "");
+  const models = geminiModelCandidates();
+
+  let lastError: unknown;
+  for (const modelPath of models) {
+    try {
+      return await requestGeminiPlan({ apiKey, modelPath, input, ragContext });
+    } catch (error) {
+      lastError = error;
+      if (!shouldTryNextGeminiModel(error)) break;
+    }
+  }
+
+  throw lastError;
+}
+
+async function requestGeminiPlan({
+  apiKey,
+  modelPath,
+  input,
+  ragContext,
+}: {
+  apiKey: string;
+  modelPath: string;
+  input: IdeaInput;
+  ragContext: ReturnType<typeof buildRagContext>;
+}): Promise<GeneratedPlan> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60_000);
 
