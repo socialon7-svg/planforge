@@ -68,15 +68,30 @@ function parseGeneratedPlan(content: string): GeneratedPlan {
     throw new Error("AI \uC751\uB2F5\uC774 \uBE44\uC5B4 \uC788\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694.");
   }
 
+  const jsonContent = extractJsonContent(content);
   let json: unknown;
   try {
-    json = JSON.parse(content);
+    json = JSON.parse(jsonContent);
   } catch {
     throw new Error("AI \uC751\uB2F5\uC744 \uCC98\uB9AC\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694.");
   }
 
   const parsed = generatedPlanSchema.parse(json);
   return normalizeDiagnosis(parsed as GeneratedPlan);
+}
+
+function extractJsonContent(content: string): string {
+  const trimmed = content.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fenced?.[1]) return fenced[1].trim();
+
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return trimmed.slice(firstBrace, lastBrace + 1);
+  }
+
+  return trimmed;
 }
 
 async function generateWithOpenAI(input: IdeaInput): Promise<GeneratedPlan> {
