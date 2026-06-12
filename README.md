@@ -42,6 +42,7 @@ Set:
 AI_PROVIDER=nvidia
 AI_FALLBACK_PROVIDER=gemini
 LOCAL_DRAFT_FALLBACK=true
+AI_MAX_OUTPUT_TOKENS=6500
 NVIDIA_API_KEY=nvapi-your-api-key
 NVIDIA_MODEL=meta/llama-3.1-8b-instruct
 GEMINI_API_KEY=your-gemini-api-key
@@ -52,7 +53,7 @@ OPENAI_API_KEY=sk-your-api-key
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
-Production requires the matching provider key in Vercel project environment variables. For NVIDIA NIM, set `AI_PROVIDER=nvidia`, `NVIDIA_API_KEY`, and optionally `NVIDIA_MODEL`. NVIDIA NIM uses the OpenAI-compatible endpoint `https://integrate.api.nvidia.com/v1`, so the existing OpenAI SDK is reused. If multiple provider keys are configured, `AI_FALLBACK_PROVIDER` lets the app try another provider when the primary provider returns quota or temporary capacity errors. `LOCAL_DRAFT_FALLBACK=true` keeps the MVP usable with a PSST template draft when all external AI providers are temporarily unavailable or out of quota.
+Production requires the matching provider key in Vercel project environment variables. For NVIDIA NIM, set `AI_PROVIDER=nvidia`, `NVIDIA_API_KEY`, and optionally `NVIDIA_MODEL`. `AI_MAX_OUTPUT_TOKENS` controls the response budget for fuller PSST drafts. NVIDIA NIM uses the OpenAI-compatible endpoint `https://integrate.api.nvidia.com/v1`, so the existing OpenAI SDK is reused. If multiple provider keys are configured, `AI_FALLBACK_PROVIDER` lets the app try another provider when the primary provider returns quota or temporary capacity errors. `LOCAL_DRAFT_FALLBACK=true` keeps the MVP usable with a PSST template draft when all external AI providers are temporarily unavailable or out of quota.
 
 Run locally:
 

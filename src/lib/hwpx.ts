@@ -197,71 +197,71 @@ function makeTemplateTextReplacements(plan: GeneratedPlan): Map<number, string> 
     labeledValue(plan.basicInfo.body, ["예상 정부지원사업비", "정부지원사업비", "사업비"], 60) ??
     firstContentLine(plan.budget.body) ??
     "추가 작성 필요";
-  const problemSegments = shortSegments(`${plan.problem.body}\n${plan.market.body}`, 6, 115);
-  const solutionSegments = shortSegments(plan.solution.body, 5, 115);
-  const competitorSegments = shortSegments(plan.competitor.body, 4, 110);
-  const businessSegments = shortSegments(`${plan.businessModel.body}\n${plan.scaleUp.body}`, 5, 115);
-  const budgetSegments = shortSegments(plan.budget.body, 6, 105);
-  const roadmapSegments = shortSegments(plan.roadmap.body, 8, 105);
-  const teamSegments = shortSegments(`${plan.team.body}\n${plan.partners.body}`, 4, 110);
+  const problemSegments = shortSegments(`${plan.problem.body}\n${plan.market.body}`, 6, 170);
+  const solutionSegments = shortSegments(plan.solution.body, 5, 170);
+  const competitorSegments = shortSegments(plan.competitor.body, 4, 160);
+  const businessSegments = shortSegments(`${plan.businessModel.body}\n${plan.scaleUp.body}`, 6, 165);
+  const budgetSegments = shortSegments(plan.budget.body, 6, 150);
+  const roadmapSegments = shortSegments(plan.roadmap.body, 8, 150);
+  const teamSegments = shortSegments(`${plan.team.body}\n${plan.partners.body}`, 5, 160);
   const amounts = amountRows(totalBudget);
   const replacements = new Map<number, string>();
 
   setTemplateReplacement(replacements, 3, itemName, 90);
   setTemplateReplacement(replacements, 5, category, 90);
-  setTemplateReplacement(replacements, 7, plan.itemSummary.body, 190);
-  setTemplateReplacement(replacements, 8, `목표 산출물: ${outputs}`, 120);
-  setTemplateReplacement(replacements, 10, `${plan.problem.body}\n${plan.market.body}`, 180);
-  setTemplateReplacement(replacements, 12, plan.solution.body, 170);
-  setTemplateReplacement(replacements, 13, plan.competitor.body, 130);
-  setTemplateReplacement(replacements, 15, `${plan.businessModel.body}\n${plan.scaleUp.body}`, 180);
-  setTemplateReplacement(replacements, 17, `${plan.team.body}\n${plan.partners.body}`, 160);
+  setTemplateReplacement(replacements, 7, plan.itemSummary.body, 300);
+  setTemplateReplacement(replacements, 8, `목표 산출물: ${outputs}`, 160);
+  setTemplateReplacement(replacements, 10, `${plan.problem.body}\n${plan.market.body}`, 320);
+  setTemplateReplacement(replacements, 12, plan.solution.body, 280);
+  setTemplateReplacement(replacements, 13, plan.competitor.body, 220);
+  setTemplateReplacement(replacements, 15, `${plan.businessModel.body}\n${plan.scaleUp.body}`, 320);
+  setTemplateReplacement(replacements, 17, `${plan.team.body}\n${plan.partners.body}`, 260);
   setTemplateReplacement(replacements, 19, "MVP 화면, 서비스 흐름도, 고객 사용 장면은 별도 이미지로 삽입 예정입니다.", 95);
   setTemplateReplacement(replacements, 20, "제품·서비스 구조도 또는 검증 화면 이미지를 삽입할 수 있습니다.", 95);
   setTemplateReplacement(replacements, 21, "MVP 화면 또는 서비스 흐름도", 70);
   setTemplateReplacement(replacements, 22, "제품·서비스 구조도", 70);
 
-  setTemplateReplacement(replacements, 25, `${plan.problem.body}\n${plan.market.body}`, 210);
-  setTemplateRows(replacements, [26, 27, 28, 29, 30, 31], problemSegments, 115);
+  setTemplateReplacement(replacements, 25, `${plan.problem.body}\n${plan.market.body}`, 380);
+  setTemplateRows(replacements, [26, 27, 28, 29, 30, 31], problemSegments, 170);
 
-  setTemplateReplacement(replacements, 34, `${plan.solution.body}\n${plan.budget.body}`, 210);
+  setTemplateReplacement(replacements, 34, `${plan.solution.body}\n${plan.budget.body}`, 380);
   setTemplateRows(
     replacements,
     [35, 36, 37, 38, 39],
     [...solutionSegments.slice(0, 3), budgetSegments[0], competitorSegments[0]],
-    115,
+    170,
   );
 
   setTemplateRows(replacements, [48, 52, 56, 60], ["MVP 핵심 기능 개발", "고객 검증 및 파일럿", "개선·고도화", "시제품 완성 및 사업화 준비"], 80);
   setTemplateRows(replacements, [49, 53, 57, 61], ["협약 1~2개월", "협약 3~4개월", "협약 5개월", "협약기간 말"], 50);
-  setTemplateRows(replacements, [50, 54, 58, 62], roadmapSegments.slice(0, 4), 105);
+  setTemplateRows(replacements, [50, 54, 58, 62], roadmapSegments.slice(0, 4), 150);
 
-  setTemplateReplacement(replacements, 65, `1단계 정부지원사업비는 ${totalBudget} 기준으로 산출근거와 산출물을 연결해 집행합니다.`, 120);
+  setTemplateReplacement(replacements, 65, `1단계 정부지원사업비는 ${totalBudget} 기준으로 MVP 개발, 고객 검증, 사업화 자료 제작 산출물과 직접 연결되도록 집행합니다.`, 170);
   setTemplateRows(replacements, [69, 74, 77], ["개발비", "실증·외주용역비", "사업화비"], 50);
-  setTemplateRows(replacements, [70, 72, 75, 78], budgetSegments.slice(0, 4), 105);
+  setTemplateRows(replacements, [70, 72, 75, 78], budgetSegments.slice(0, 4), 150);
   setTemplateRows(replacements, [71, 73, 76, 79], amounts, 55);
   setTemplateReplacement(replacements, 82, totalBudget, 55);
 
-  setTemplateReplacement(replacements, 84, `2단계 사업비는 검증 결과에 따라 고도화, 시장진입, 파트너십 확장에 배분합니다.`, 120);
+  setTemplateReplacement(replacements, 84, `2단계 사업비는 1단계 검증 결과를 근거로 기능 고도화, 유료 고객 전환, 파트너십 확장, 시장진입 자료 제작에 배분합니다.`, 170);
   setTemplateRows(replacements, [88, 93, 96], ["고도화 개발비", "검증·외주용역비", "시장진입비"], 50);
-  setTemplateRows(replacements, [89, 91, 94, 97], budgetSegments.slice(2, 6), 105);
+  setTemplateRows(replacements, [89, 91, 94, 97], budgetSegments.slice(2, 6), 150);
   setTemplateRows(replacements, [90, 92, 95, 98], amounts, 55);
   setTemplateReplacement(replacements, 101, "추가 검증 후 확정", 55);
 
-  setTemplateReplacement(replacements, 104, `${plan.competitor.body}\n${plan.scaleUp.body}`, 180);
-  setTemplateReplacement(replacements, 105, plan.businessModel.body, 160);
-  setTemplateReplacement(replacements, 106, plan.roadmap.body, 140);
-  setTemplateReplacement(replacements, 107, "환경·사회적 가치는 고객 검증 후 정량 지표를 추가 검증 필요 항목으로 관리합니다.", 120);
-  setTemplateReplacement(replacements, 108, "초기 고객과 협력기관의 피드백을 반영해 서비스 접근성과 활용성을 개선합니다.", 120);
-  setTemplateReplacement(replacements, 109, "개인정보와 고객 데이터를 최소 수집하고 운영 기준을 문서화합니다.", 120);
-  setTemplateRows(replacements, [110, 111, 112, 113, 114, 115], businessSegments, 115);
+  setTemplateReplacement(replacements, 104, `${plan.competitor.body}\n${plan.scaleUp.body}`, 320);
+  setTemplateReplacement(replacements, 105, plan.businessModel.body, 280);
+  setTemplateReplacement(replacements, 106, plan.roadmap.body, 260);
+  setTemplateReplacement(replacements, 107, "환경·사회적 가치는 고객 검증 후 정량 지표를 추가 검증 필요 항목으로 관리하고, 실제 절감 효과가 확인된 범위에서만 제시합니다.", 160);
+  setTemplateReplacement(replacements, 108, "초기 고객과 협력기관의 피드백을 반영해 서비스 접근성, 사용성, 운영 프로세스를 개선하고 반복 적용 가능한 도입 절차를 정리합니다.", 160);
+  setTemplateReplacement(replacements, 109, "개인정보와 고객 데이터를 최소 수집하고 운영 기준을 문서화하여, 사업화 과정에서 신뢰성과 관리 체계를 함께 확보합니다.", 160);
+  setTemplateRows(replacements, [110, 111, 112, 113, 114, 115], businessSegments, 165);
 
   setTemplateRows(replacements, [124, 128, 132, 136], ["MVP 설계 및 프로토타입", "파일럿 운영", "유료 베타 전환", "시장 확대 및 파트너십"], 80);
   setTemplateRows(replacements, [125, 129, 133, 137], ["1년차 상반기", "1년차 하반기", "2년차", "3년차"], 50);
-  setTemplateRows(replacements, [126, 130, 134, 138], roadmapSegments.slice(4, 8), 105);
+  setTemplateRows(replacements, [126, 130, 134, 138], roadmapSegments.slice(4, 8), 150);
 
   setTemplateReplacement(replacements, 16, "팀 구성\n(Team)", 40);
-  setTemplateReplacement(replacements, 17, teamSegments.join(" "), 160);
+  setTemplateReplacement(replacements, 17, teamSegments.join(" "), 260);
 
   return replacements;
 }

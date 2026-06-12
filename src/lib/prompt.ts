@@ -12,7 +12,11 @@ Hard rules:
 - If market size or statistics are mentioned, mark them with the Korean phrase "\uCD94\uAC00 \uAC80\uC99D \uD544\uC694".
 - Write in a practical Korean public-support-program proposal style.
 - Prefer concrete execution plans, outputs, customers, and validation methods over advertising language.
-- Write each section body as concise bullet-style paragraphs. Prefer 3-7 bullets per section and keep each bullet under about 120 Korean characters when possible.
+- Write enough detail for a usable first draft, not a short summary. Each main body section should be substantial.
+- For Problem, Solution, Market, Competitor, Business Model, Scale-up, Budget, Roadmap, Team, and Partners, write 3-4 bullet-style paragraphs per section. Each bullet should usually be 1-2 Korean sentences, with concrete execution details.
+- Basic Info should include 6-8 labeled rows. Item Summary should be 2-3 compact paragraphs.
+- Budget must include expense category, calculation basis, expected output, and commercialization linkage.
+- Roadmap must include agreement-period actions, year-1 actions, and year-2/3 expansion actions with milestones.
 - For Budget, Roadmap, Team, and Competitor sections, include row-like details that can be converted into HWPX tables.
 - Return only valid JSON matching the requested schema.
 - Return a single JSON object that starts with { and ends with }. Do not wrap it in markdown, prose, or comments.
@@ -28,7 +32,8 @@ Anonymized PSST template pattern learned from the user's local PDF examples:
 - Scale-up section: initial entry -> PoC/pilot -> partnership/certification -> market expansion.
 - Budget and roadmap sections: budget item -> calculation basis -> connected output; monthly or quarterly milestones.
 - Team section: founder/team roles -> capabilities -> missing-capability supplementation -> external cooperation.
-- Prefer bullet paragraphs, measurable outputs, grant-period milestones, budget-output linkage, and evaluator-friendly practical writing.
+- Prefer substantial bullet paragraphs, measurable outputs, grant-period milestones, budget-output linkage, and evaluator-friendly practical writing.
+- The draft should be long enough that a founder can edit it into an application form: avoid one-line section answers.
 - Never reuse names, file names, original sentences, schools, workplaces, or contact details from the PDFs.
 `;
 
@@ -64,6 +69,12 @@ ${safeInputJson}
 
 Section writing rules:
 ${sectionInstructions}
+
+Output length requirements:
+- Do not produce a minimal answer. Write a serious PSST draft with enough content for review.
+- For problem/solution/market/competitor/businessModel/scaleUp/budget/roadmap/team/partners, each body should normally be 350-550 Korean characters.
+- Use line breaks between bullet-style paragraphs. A good format is "- 핵심문장. 실행근거/검증방법. 산출물 또는 평가 관점."
+- If the user input is thin, make reasonable business-plan assumptions but mark unverifiable market/statistic claims as "추가 검증 필요".
 
 PDF-derived PSST template pattern:
 ${anonymizedPdfTemplatePattern}

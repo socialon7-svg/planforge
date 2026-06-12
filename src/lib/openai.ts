@@ -6,6 +6,7 @@ import { buildUserPrompt, systemPrompt } from "@/lib/prompt";
 import { generatedPlanSchema } from "@/lib/schema";
 import { normalizeDiagnosis } from "@/lib/diagnosis";
 import { generateLocalFallbackPlan } from "@/lib/local-plan";
+import { ensurePlanDepth } from "@/lib/plan-depth";
 
 let cachedOpenAiClient: OpenAI | null = null;
 let cachedNvidiaClient: OpenAI | null = null;
@@ -86,6 +87,11 @@ function localDraftFallbackEnabled(): boolean {
   return process.env.LOCAL_DRAFT_FALLBACK !== "false";
 }
 
+function maxOutputTokens(): number {
+  const parsed = Number.parseInt(process.env.AI_MAX_OUTPUT_TOKENS ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 6_500;
+}
+
 function openaiClient(): OpenAI {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not configured.");
@@ -107,7 +113,7 @@ function nvidiaClient(): OpenAI {
   cachedNvidiaClient ??= new OpenAI({
     apiKey: process.env.NVIDIA_API_KEY,
     baseURL: "https://integrate.api.nvidia.com/v1",
-    timeout: 90_000,
+    timeout: 150_000,
   });
 
   return cachedNvidiaClient;
@@ -159,7 +165,7 @@ async function generateWithOpenAI(input: IdeaInput): Promise<GeneratedPlan> {
   const response = await client.chat.completions.create({
     model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
     temperature: 0.35,
-    max_tokens: 8000,
+    max_tokens: maxOutputTokens(),
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
@@ -168,7 +174,7 @@ async function generateWithOpenAI(input: IdeaInput): Promise<GeneratedPlan> {
   });
 
   const content = response.choices[0]?.message.content;
-  return parseGeneratedPlan(content ?? "");
+  return ensurePlanDepth(parseGeneratedPlan(content ?? ""), input);
 }
 
 async function generateWithNvidia(input: IdeaInput): Promise<GeneratedPlan> {
@@ -178,7 +184,7 @@ async function generateWithNvidia(input: IdeaInput): Promise<GeneratedPlan> {
   const response = await client.chat.completions.create({
     model: process.env.NVIDIA_MODEL ?? "meta/llama-3.1-8b-instruct",
     temperature: 0.25,
-    max_tokens: 8000,
+    max_tokens: maxOutputTokens(),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: buildUserPrompt(input, ragContext) },
@@ -186,7 +192,7 @@ async function generateWithNvidia(input: IdeaInput): Promise<GeneratedPlan> {
   });
 
   const content = response.choices[0]?.message.content;
-  return parseGeneratedPlan(content ?? "");
+  return ensurePlanDepth(parseGeneratedPlan(content ?? ""), input);
 }
 
 async function generateWithGemini(input: IdeaInput): Promise<GeneratedPlan> {
@@ -246,7 +252,7 @@ async function requestGeminiPlan({
           ],
           generationConfig: {
             temperature: 0.35,
-            maxOutputTokens: 8000,
+            maxOutputTokens: maxOutputTokens(),
             responseMimeType: "application/json",
           },
         }),
@@ -266,7 +272,7 @@ async function requestGeminiPlan({
         .join("")
         .trim() ?? "";
 
-    return parseGeneratedPlan(content);
+    return ensurePlanDepth(parseGeneratedPlan(content), input);
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("AI \uC751\uB2F5 \uC2DC\uAC04\uC774 \uCD08\uACFC\uB410\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694.");
@@ -284,9 +290,10 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
     return await generateWithProvider(provider, input);
   } catch (error) {
     const fallback = fallbackProvider();
-    if (!fallback || fallback === provider || !isRecoverableAiError(error)) {
-      if (localDraftFallbackEnabled() && isRecoverableAiError(error)) {
-        return generateLocalFallbackPlan(input);
+    const primaryRecoverable = isRecoverableAiError(error);
+    if (!fallback || fallback === provider || !primaryRecoverable) {
+      if (localDraftFallbackEnabled() && primaryRecoverable) {
+        return ensurePlanDepth(generateLocalFallbackPlan(input), input);
       }
       throw error;
     }
@@ -294,8 +301,8 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
     try {
       return await generateWithProvider(fallback, input);
     } catch (fallbackError) {
-      if (localDraftFallbackEnabled() && isRecoverableAiError(fallbackError)) {
-        return generateLocalFallbackPlan(input);
+      if (localDraftFallbackEnabled() && (primaryRecoverable || isRecoverableAiError(fallbackError))) {
+        return ensurePlanDepth(generateLocalFallbackPlan(input), input);
       }
       throw fallbackError;
     }

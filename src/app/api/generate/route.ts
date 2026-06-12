@@ -4,6 +4,7 @@ import { generateBusinessPlan } from "@/lib/openai";
 import { ideaInputSchema } from "@/lib/schema";
 
 export const runtime = "nodejs";
+export const maxDuration = 180;
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
