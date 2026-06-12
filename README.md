@@ -41,6 +41,7 @@ Set:
 ```bash
 AI_PROVIDER=gemini
 AI_FALLBACK_PROVIDER=openai
+LOCAL_DRAFT_FALLBACK=true
 GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-2.5-flash
 
@@ -49,7 +50,7 @@ OPENAI_API_KEY=sk-your-api-key
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
-Production requires the matching provider key in Vercel project environment variables. For Gemini, set `AI_PROVIDER=gemini`, `GEMINI_API_KEY`, and optionally `GEMINI_MODEL`. If both provider keys are configured, `AI_FALLBACK_PROVIDER=openai` lets the app try OpenAI when Gemini returns quota or temporary capacity errors. Without a configured provider key, the UI loads but AI generation cannot run.
+Production requires the matching provider key in Vercel project environment variables. For Gemini, set `AI_PROVIDER=gemini`, `GEMINI_API_KEY`, and optionally `GEMINI_MODEL`. If both provider keys are configured, `AI_FALLBACK_PROVIDER=openai` lets the app try OpenAI when Gemini returns quota or temporary capacity errors. `LOCAL_DRAFT_FALLBACK=true` keeps the MVP usable with a PSST template draft when all external AI providers are temporarily unavailable or out of quota.
 
 Run locally:
 

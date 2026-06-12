@@ -5,6 +5,7 @@ import { buildRagContext } from "@/lib/rag";
 import { buildUserPrompt, systemPrompt } from "@/lib/prompt";
 import { generatedPlanSchema } from "@/lib/schema";
 import { normalizeDiagnosis } from "@/lib/diagnosis";
+import { generateLocalFallbackPlan } from "@/lib/local-plan";
 
 let cachedClient: OpenAI | null = null;
 
@@ -62,8 +63,24 @@ function shouldTryNextGeminiModel(error: unknown): boolean {
   );
 }
 
-function shouldTryFallbackProvider(error: unknown): boolean {
-  return shouldTryNextGeminiModel(error);
+function isRecoverableAiError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const status = (error as GeminiApiError).status;
+  const message = error.message.toLowerCase();
+
+  return (
+    shouldTryNextGeminiModel(error) ||
+    status === 429 ||
+    status === 503 ||
+    message.includes("quota") ||
+    message.includes("rate limit") ||
+    message.includes("capacity") ||
+    message.includes("exceeded")
+  );
+}
+
+function localDraftFallbackEnabled(): boolean {
+  return process.env.LOCAL_DRAFT_FALLBACK !== "false";
 }
 
 function openaiClient(): OpenAI {
@@ -232,10 +249,20 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
     return await (provider === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input));
   } catch (error) {
     const fallback = fallbackProvider();
-    if (!fallback || fallback === provider || !shouldTryFallbackProvider(error)) {
+    if (!fallback || fallback === provider || !isRecoverableAiError(error)) {
+      if (localDraftFallbackEnabled() && isRecoverableAiError(error)) {
+        return generateLocalFallbackPlan(input);
+      }
       throw error;
     }
 
-    return fallback === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input);
+    try {
+      return await (fallback === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input));
+    } catch (fallbackError) {
+      if (localDraftFallbackEnabled() && isRecoverableAiError(fallbackError)) {
+        return generateLocalFallbackPlan(input);
+      }
+      throw fallbackError;
+    }
   }
 }
