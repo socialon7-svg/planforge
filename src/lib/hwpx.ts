@@ -61,11 +61,11 @@ function extractRootOpen(sectionXml: string): string {
 }
 
 function extractSectionPropertiesParagraph(sectionXml: string): string {
-  const match = sectionXml.match(/<hp:p\b[\s\S]*?<hp:secPr\b[\s\S]*?<\/hp:p>/);
+  const match = sectionXml.match(/<hp:secPr\b[\s\S]*?<\/hp:secPr>/);
   if (!match) {
     throw new Error("HWPX section properties were not found.");
   }
-  return match[0];
+  return `<hp:p id="0" paraPrIDRef="51" styleIDRef="0" pageBreak="0" columnBreak="0" merged="0"><hp:run charPrIDRef="29"><hp:ctrl>${match[0]}</hp:ctrl></hp:run></hp:p>`;
 }
 
 function paragraph(
