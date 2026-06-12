@@ -7,9 +7,10 @@ import { generatedPlanSchema } from "@/lib/schema";
 import { normalizeDiagnosis } from "@/lib/diagnosis";
 import { generateLocalFallbackPlan } from "@/lib/local-plan";
 
-let cachedClient: OpenAI | null = null;
+let cachedOpenAiClient: OpenAI | null = null;
+let cachedNvidiaClient: OpenAI | null = null;
 
-type AiProvider = "openai" | "gemini";
+type AiProvider = "nvidia" | "openai" | "gemini";
 
 type GeminiPart = {
   text?: string;
@@ -31,14 +32,15 @@ type GeminiApiError = Error & { status?: number };
 
 function selectedProvider(): AiProvider {
   const configured = process.env.AI_PROVIDER?.toLowerCase();
-  if (configured === "gemini" || configured === "openai") return configured;
+  if (configured === "nvidia" || configured === "gemini" || configured === "openai") return configured;
+  if (process.env.NVIDIA_API_KEY) return "nvidia";
   if (process.env.GEMINI_API_KEY) return "gemini";
   return "openai";
 }
 
 function fallbackProvider(): AiProvider | null {
   const configured = process.env.AI_FALLBACK_PROVIDER?.toLowerCase();
-  if (configured === "gemini" || configured === "openai") return configured;
+  if (configured === "nvidia" || configured === "gemini" || configured === "openai") return configured;
   return null;
 }
 
@@ -75,7 +77,8 @@ function isRecoverableAiError(error: unknown): boolean {
     message.includes("quota") ||
     message.includes("rate limit") ||
     message.includes("capacity") ||
-    message.includes("exceeded")
+    message.includes("exceeded") ||
+    message.includes("ai 응답")
   );
 }
 
@@ -88,12 +91,26 @@ function openaiClient(): OpenAI {
     throw new Error("OPENAI_API_KEY is not configured.");
   }
 
-  cachedClient ??= new OpenAI({
+  cachedOpenAiClient ??= new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
     timeout: 60_000,
   });
 
-  return cachedClient;
+  return cachedOpenAiClient;
+}
+
+function nvidiaClient(): OpenAI {
+  if (!process.env.NVIDIA_API_KEY) {
+    throw new Error("NVIDIA_API_KEY is not configured.");
+  }
+
+  cachedNvidiaClient ??= new OpenAI({
+    apiKey: process.env.NVIDIA_API_KEY,
+    baseURL: "https://integrate.api.nvidia.com/v1",
+    timeout: 90_000,
+  });
+
+  return cachedNvidiaClient;
 }
 
 function parseGeneratedPlan(content: string): GeneratedPlan {
@@ -144,6 +161,24 @@ async function generateWithOpenAI(input: IdeaInput): Promise<GeneratedPlan> {
     temperature: 0.35,
     max_tokens: 8000,
     response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: buildUserPrompt(input, ragContext) },
+    ],
+  });
+
+  const content = response.choices[0]?.message.content;
+  return parseGeneratedPlan(content ?? "");
+}
+
+async function generateWithNvidia(input: IdeaInput): Promise<GeneratedPlan> {
+  const client = nvidiaClient();
+  const ragContext = buildRagContext(input);
+
+  const response = await client.chat.completions.create({
+    model: process.env.NVIDIA_MODEL ?? "meta/llama-3.1-8b-instruct",
+    temperature: 0.25,
+    max_tokens: 8000,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: buildUserPrompt(input, ragContext) },
@@ -246,7 +281,7 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
   const provider = selectedProvider();
 
   try {
-    return await (provider === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input));
+    return await generateWithProvider(provider, input);
   } catch (error) {
     const fallback = fallbackProvider();
     if (!fallback || fallback === provider || !isRecoverableAiError(error)) {
@@ -257,7 +292,7 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
     }
 
     try {
-      return await (fallback === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input));
+      return await generateWithProvider(fallback, input);
     } catch (fallbackError) {
       if (localDraftFallbackEnabled() && isRecoverableAiError(fallbackError)) {
         return generateLocalFallbackPlan(input);
@@ -265,4 +300,10 @@ export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedP
       throw fallbackError;
     }
   }
+}
+
+function generateWithProvider(provider: AiProvider, input: IdeaInput): Promise<GeneratedPlan> {
+  if (provider === "nvidia") return generateWithNvidia(input);
+  if (provider === "gemini") return generateWithGemini(input);
+  return generateWithOpenAI(input);
 }

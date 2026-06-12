@@ -19,12 +19,13 @@ Hard rules:
 
 const anonymizedPdfTemplatePattern = `
 Anonymized PSST template pattern learned from the user's local PDF examples:
-- Start with an item summary table-like flow: item name, category, item overview, Problem summary, Solution summary, Scale-up summary, Team summary.
-- Use the major PSST body sections: Problem, Solution, Scale-up, Team.
-- Problem should connect market/environment change, target customer pain, current alternative limits, and development necessity.
-- Solution should describe final MVP output, development scope, core features, validation method, differentiation, and competitiveness.
-- Scale-up should combine competitor analysis, market entry, business model, roadmap, partner strategy, and funding/investment plan.
-- Team should focus on roles, capabilities, partners, and missing-capability supplementation without personal details.
+- First page summary flow: item name, industry/category, item overview, Problem summary, Solution summary, Scale-up summary, Team summary.
+- Problem section: market/environment change -> target customer pain -> limits of current alternatives -> necessity of development.
+- Solution section: MVP output -> core functions -> development scope -> validation plan -> differentiation.
+- Market and competitor sections: target market -> initial customer -> expansion market; competitor groups -> limits -> differentiation.
+- Scale-up section: initial entry -> PoC/pilot -> partnership/certification -> market expansion.
+- Budget and roadmap sections: budget item -> calculation basis -> connected output; monthly or quarterly milestones.
+- Team section: founder/team roles -> capabilities -> missing-capability supplementation -> external cooperation.
 - Prefer bullet paragraphs, measurable outputs, grant-period milestones, budget-output linkage, and evaluator-friendly practical writing.
 - Never reuse names, file names, original sentences, schools, workplaces, or contact details from the PDFs.
 `;
@@ -71,29 +72,29 @@ ${JSON.stringify(sanitizedRag, null, 2)}
 
 Return JSON schema:
 {
-  "basicInfo": {"title": "Basic Info", "body": "..."},
-  "itemSummary": {"title": "Item Summary", "body": "..."},
-  "problem": {"title": "Problem", "body": "..."},
-  "solution": {"title": "Solution", "body": "..."},
-  "market": {"title": "Market", "body": "..."},
-  "competitor": {"title": "Competitor", "body": "..."},
-  "businessModel": {"title": "Business Model", "body": "..."},
-  "scaleUp": {"title": "Scale-up", "body": "..."},
-  "budget": {"title": "Budget", "body": "..."},
-  "roadmap": {"title": "Roadmap", "body": "..."},
-  "team": {"title": "Team", "body": "..."},
-  "partners": {"title": "Partners", "body": "..."},
+  "basicInfo": {"title": "기본 정보", "body": "..."},
+  "itemSummary": {"title": "아이템 요약", "body": "..."},
+  "problem": {"title": "문제 인식 (Problem)", "body": "..."},
+  "solution": {"title": "해결 방안 (Solution)", "body": "..."},
+  "market": {"title": "시장 분석", "body": "..."},
+  "competitor": {"title": "경쟁 분석", "body": "..."},
+  "businessModel": {"title": "비즈니스 모델", "body": "..."},
+  "scaleUp": {"title": "성장전략 (Scale-up)", "body": "..."},
+  "budget": {"title": "사업비 계획", "body": "..."},
+  "roadmap": {"title": "추진 일정", "body": "..."},
+  "team": {"title": "팀 구성 (Team)", "body": "..."},
+  "partners": {"title": "협력기관", "body": "..."},
   "selfDiagnosis": [
-    {"label": "problem recognition specificity", "status": "good|warning|missing", "comment": "..."}
+    {"label": "문제 인식 구체성", "status": "good|warning|missing", "comment": "..."},
+    {"label": "고객군 명확성", "status": "good|warning|missing", "comment": "..."},
+    {"label": "MVP 수준 해결책 구체성", "status": "good|warning|missing", "comment": "..."},
+    {"label": "경쟁 대안 및 차별성", "status": "good|warning|missing", "comment": "..."},
+    {"label": "사업화 실행 가능성", "status": "good|warning|missing", "comment": "..."},
+    {"label": "사업비와 산출물 연계성", "status": "good|warning|missing", "comment": "..."},
+    {"label": "팀 역량 및 보완계획", "status": "good|warning|missing", "comment": "..."}
   ]
 }
 
-Include exactly these seven self-diagnosis labels, translated into Korean in the returned JSON:
-- Is the problem recognition specific?
-- Is the customer segment clear?
-- Is the solution concrete at MVP level?
-- Are competitor alternatives and differentiation clear?
-- Is the commercialization strategy executable?
-- Is the budget plan connected to outputs?
-- Are team capabilities and capability-gap plans included?`;
+Use exactly the seven Korean selfDiagnosis labels shown above. Do not translate, rename, add, or remove labels.
+Each selfDiagnosis comment must be written in Korean and explain what is good or what needs improvement.`;
 }

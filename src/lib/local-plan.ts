@@ -147,37 +147,37 @@ ${itemName}은/는 ${customers}이/가 겪는 문제를 해결하기 위한 사�
     ),
     selfDiagnosis: [
       {
-        label: "Problem recognition specificity",
+        label: "문제 인식 구체성",
         status: status(input.customerProblem),
         comment: input.customerProblem.trim() ? "고객 문제를 입력값 기반으로 구체화했습니다." : "고객 문제를 더 구체적으로 입력해야 합니다.",
       },
       {
-        label: "Customer segment clarity",
+        label: "고객군 명확성",
         status: status(input.customers),
         comment: input.customers.trim() ? "초기 고객군이 식별되어 있습니다." : "초기 고객군 정의가 필요합니다.",
       },
       {
-        label: "MVP-level solution concreteness",
+        label: "MVP 수준 해결책 구체성",
         status: status(`${input.solution} ${input.coreTech}`),
         comment: "MVP 범위는 핵심 기능과 검증 산출물 중심으로 보완했습니다.",
       },
       {
-        label: "Competitor alternatives and differentiation",
+        label: "경쟁 대안 및 차별성",
         status: input.competitors.trim() ? "good" : "warning",
         comment: input.competitors.trim() ? "경쟁 대안이 입력되어 차별화 구조를 작성했습니다." : "경쟁 대안 입력이 부족해 일반 대체재 기준으로 작성했습니다.",
       },
       {
-        label: "Commercialization execution feasibility",
+        label: "사업화 실행 가능성",
         status: status(input.revenueModel),
         comment: "수익모델, 판매 채널, 초기 검증 흐름을 연결했습니다.",
       },
       {
-        label: "Budget and output connection",
+        label: "사업비와 산출물 연계성",
         status: status(`${input.expectedBudget} ${input.targetOutputs}`),
         comment: "예산 항목을 목표 산출물과 연결했습니다.",
       },
       {
-        label: "Team capabilities and gap plan",
+        label: "팀 역량 및 보완계획",
         status: status(input.team),
         comment: "팀 역할과 부족역량 보완계획을 포함했습니다.",
       },

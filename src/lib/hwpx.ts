@@ -82,7 +82,25 @@ function paragraph(
 function compact(value: string, maxLength = 560): string {
   const normalized = value.replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) return normalized;
-  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+
+  const ellipsis = "...";
+  const truncated = normalized.slice(0, Math.max(0, maxLength - ellipsis.length)).trimEnd();
+  const sentenceEnds = [".", "?", "!", "다.", "요.", "함.", "됨.", "음."];
+  const lastSentenceEnd = sentenceEnds.reduce((best, marker) => {
+    const index = truncated.lastIndexOf(marker);
+    return index > best ? index + marker.length : best;
+  }, -1);
+
+  if (lastSentenceEnd > maxLength * 0.5) {
+    return truncated.slice(0, lastSentenceEnd).trimEnd();
+  }
+
+  const lastSpace = truncated.lastIndexOf(" ");
+  if (lastSpace > maxLength * 0.5) {
+    return `${truncated.slice(0, lastSpace).trimEnd()}${ellipsis}`;
+  }
+
+  return `${truncated}${ellipsis}`;
 }
 
 function generatedPlanLines(plan: GeneratedPlan): string[] {

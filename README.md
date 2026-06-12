@@ -16,7 +16,7 @@ Vercel project:
 - Landing page with CTA
 - Startup idea input form
 - Local JSONL RAG loader and search
-- OpenAI or Gemini JSON generation API
+- NVIDIA NIM, OpenAI, or Gemini JSON generation API
 - 12 editable result sections
 - Copy all and copy section
 - JSON, Markdown, and HWPX download
@@ -39,18 +39,20 @@ cp .env.example .env.local
 Set:
 
 ```bash
-AI_PROVIDER=gemini
-AI_FALLBACK_PROVIDER=openai
+AI_PROVIDER=nvidia
+AI_FALLBACK_PROVIDER=gemini
 LOCAL_DRAFT_FALLBACK=true
+NVIDIA_API_KEY=nvapi-your-api-key
+NVIDIA_MODEL=meta/llama-3.1-8b-instruct
 GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-2.5-flash
 
-# Or use OpenAI instead
+# Optional OpenAI fallback
 OPENAI_API_KEY=sk-your-api-key
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
-Production requires the matching provider key in Vercel project environment variables. For Gemini, set `AI_PROVIDER=gemini`, `GEMINI_API_KEY`, and optionally `GEMINI_MODEL`. If both provider keys are configured, `AI_FALLBACK_PROVIDER=openai` lets the app try OpenAI when Gemini returns quota or temporary capacity errors. `LOCAL_DRAFT_FALLBACK=true` keeps the MVP usable with a PSST template draft when all external AI providers are temporarily unavailable or out of quota.
+Production requires the matching provider key in Vercel project environment variables. For NVIDIA NIM, set `AI_PROVIDER=nvidia`, `NVIDIA_API_KEY`, and optionally `NVIDIA_MODEL`. NVIDIA NIM uses the OpenAI-compatible endpoint `https://integrate.api.nvidia.com/v1`, so the existing OpenAI SDK is reused. If multiple provider keys are configured, `AI_FALLBACK_PROVIDER` lets the app try another provider when the primary provider returns quota or temporary capacity errors. `LOCAL_DRAFT_FALLBACK=true` keeps the MVP usable with a PSST template draft when all external AI providers are temporarily unavailable or out of quota.
 
 Run locally:
 
@@ -73,7 +75,7 @@ npm.cmd run build
 src/app                 App Router pages and API routes
 src/components          Client UI
 src/lib/rag.ts          Local JSONL RAG loader and keyword search
-src/lib/openai.ts       AI provider calls for OpenAI and Gemini
+src/lib/openai.ts       AI provider calls for NVIDIA NIM, OpenAI, and Gemini
 src/lib/prompt.ts       Prompt builder
 src/lib/export.ts       JSON/Markdown/plain-text helpers
 src/lib/hwpx.ts         HWPX placeholder replacement
@@ -113,7 +115,7 @@ The user-provided PDF plans are processed locally with anonymized temporary file
 
 - Runnable Next.js MVP
 - Local RAG search with keyword overlap, section weight, and tag match
-- OpenAI/Gemini generation route
+- NVIDIA NIM/OpenAI/Gemini generation route
 - Strong privacy and anti-copy prompt rules
 - Editable result UI
 - JSON, Markdown, and HWPX download

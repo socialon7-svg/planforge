@@ -104,6 +104,7 @@ export default function PlanForgeApp() {
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [activeSection, setActiveSection] = useState<SectionKey>("basicInfo");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
   const [hwpxStatus, setHwpxStatus] = useState<{
@@ -148,8 +149,21 @@ export default function PlanForgeApp() {
 
   async function generatePlan() {
     setIsGenerating(true);
+    setGenerationProgress("사업 아이디어와 입력값을 정리하고 있습니다...");
     setError("");
     setCopied("");
+    const progressMessages = [
+      "RAG 작성 패턴을 검색하고 있습니다...",
+      "PSST 구조에 맞춰 초안을 구성하고 있습니다...",
+      "자가진단 항목을 점검하고 있습니다...",
+      "최종 JSON 응답을 정리하고 있습니다...",
+    ];
+    let progressIndex = 0;
+    const progressTimer = window.setInterval(() => {
+      setGenerationProgress(progressMessages[Math.min(progressIndex, progressMessages.length - 1)]);
+      progressIndex += 1;
+    }, 8000);
+
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -163,7 +177,9 @@ export default function PlanForgeApp() {
     } catch (generationError) {
       setError(generationError instanceof Error ? generationError.message : "\uC0DD\uC131\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.");
     } finally {
+      window.clearInterval(progressTimer);
       setIsGenerating(false);
+      setGenerationProgress("");
     }
   }
 
@@ -181,25 +197,32 @@ export default function PlanForgeApp() {
   async function exportHwpx() {
     if (!plan) return;
     setError("");
-    const response = await fetch("/api/export/hwpx", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan }),
-    });
+    try {
+      const response = await fetch("/api/export/hwpx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
 
-    if (!response.ok) {
-      const data = await response.json();
-      setError(data.error ?? "HWPX \uB0B4\uBCF4\uB0B4\uAE30\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.");
-      return;
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(
+          data.error ??
+            "HWPX 다운로드에 실패했습니다. Markdown 또는 JSON으로 먼저 내려받은 뒤 다시 시도해주세요.",
+        );
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "planforge-psst-draft.hwpx";
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 3000);
+    } catch {
+      setError("HWPX 다운로드 중 네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     }
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "planforge-psst-draft.hwpx";
-    anchor.click();
-    URL.revokeObjectURL(url);
   }
 
   return (
@@ -262,7 +285,7 @@ export default function PlanForgeApp() {
             disabled={!requiredReady || isGenerating}
             className="mt-5 h-12 w-full rounded-md bg-sky-700 px-4 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
-            {isGenerating ? "\uC0DD\uC131 \uC911..." : "\uC0AC\uC5C5\uACC4\uD68D\uC11C \uCD08\uC548 \uC0DD\uC131"}
+            {isGenerating ? generationProgress || "\uC0DD\uC131 \uC911..." : "\uC0AC\uC5C5\uACC4\uD68D\uC11C \uCD08\uC548 \uC0DD\uC131"}
           </button>
           {error ? <p className="mt-3 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
         </div>
