@@ -12,6 +12,8 @@ Hard rules:
 - If market size or statistics are mentioned, mark them with the Korean phrase "\uCD94\uAC00 \uAC80\uC99D \uD544\uC694".
 - Write in a practical Korean public-support-program proposal style.
 - Prefer concrete execution plans, outputs, customers, and validation methods over advertising language.
+- Write each section body as concise bullet-style paragraphs. Prefer 3-7 bullets per section and keep each bullet under about 120 Korean characters when possible.
+- For Budget, Roadmap, Team, and Competitor sections, include row-like details that can be converted into HWPX tables.
 - Return only valid JSON matching the requested schema.
 - Return a single JSON object that starts with { and ends with }. Do not wrap it in markdown, prose, or comments.
 - Set every section title field to the Korean label provided in the section writing rules.
