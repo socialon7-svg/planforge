@@ -21,10 +21,7 @@ function escapeXml(value: string): string {
 }
 
 function textToHwpxText(value: string): string {
-  return escapeXml(value)
-    .split(/\r?\n/)
-    .map((line) => line || " ")
-    .join("<hp:lineBreak/>");
+  return escapeXml(value.replace(/\r?\n/g, " "));
 }
 
 function placeholderMap(plan: GeneratedPlan): Record<string, string> {
@@ -44,10 +41,12 @@ function replacePlaceholders(
   replacements: Record<string, string>,
 ): { text: string; replacementCount: number } {
   let replacementCount = 0;
-  const replaced = text.replace(replacementPattern, (match, key: string) => {
+  const replaced = text.replace(replacementPattern, (match, key: string, offset: number, source: string) => {
     if (!(key in replacements)) return match;
     replacementCount += 1;
-    return escapeXml(replacements[key]);
+    const before = source.slice(0, offset);
+    const insideTextNode = before.lastIndexOf("<hp:t") > before.lastIndexOf("</hp:t>");
+    return insideTextNode ? textToHwpxText(replacements[key]) : escapeXml(replacements[key]);
   });
 
   return { text: replaced, replacementCount };
@@ -76,7 +75,26 @@ function paragraph(
 ): string {
   const paraPrIDRef = options.heading ? "38" : "51";
   const charPrIDRef = options.heading ? "35" : "29";
-  return `<hp:p id="${id}" paraPrIDRef="${paraPrIDRef}" styleIDRef="0" pageBreak="${options.pageBreak ? "1" : "0"}" columnBreak="0" merged="0"><hp:run charPrIDRef="${charPrIDRef}"><hp:t>${textToHwpxText(text)}</hp:t></hp:run><hp:linesegarray><hp:lineseg textpos="0" vertpos="0" vertsize="1200" textheight="1200" baseline="1020" spacing="360" horzpos="0" horzsize="48188" flags="393216"/></hp:linesegarray></hp:p>`;
+  return `<hp:p id="${id}" paraPrIDRef="${paraPrIDRef}" styleIDRef="0" pageBreak="${options.pageBreak ? "1" : "0"}" columnBreak="0" merged="0"><hp:run charPrIDRef="${charPrIDRef}"><hp:t>${textToHwpxText(text)}</hp:t></hp:run></hp:p>`;
+}
+
+function paragraphs(
+  startId: number,
+  text: string,
+  options: { heading?: boolean; pageBreak?: boolean } = {},
+): { xml: string; nextId: number } {
+  const lines = text.split(/\r?\n/);
+  let nextId = startId;
+  const xml = lines
+    .map((line, index) =>
+      paragraph(nextId++, line.trimEnd() || " ", {
+        ...options,
+        pageBreak: index === 0 ? options.pageBreak : false,
+      }),
+    )
+    .join("");
+
+  return { xml, nextId };
 }
 
 function compact(value: string, maxLength = 560): string {
@@ -151,7 +169,9 @@ function buildGeneratedSectionXml(templateSectionXml: string, plan: GeneratedPla
     .flatMap((line, index) => {
       if (!line.trim()) return [paragraph(paragraphId++, " ")];
       const isHeading = index === 0 || /^\d+\.\s/.test(line) || line === diagnosisHeading;
-      return [paragraph(paragraphId++, line, { heading: isHeading })];
+      const result = paragraphs(paragraphId, line, { heading: isHeading });
+      paragraphId = result.nextId;
+      return [result.xml];
     })
     .join("");
 
