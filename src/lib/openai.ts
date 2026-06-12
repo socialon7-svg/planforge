@@ -34,6 +34,12 @@ function selectedProvider(): AiProvider {
   return "openai";
 }
 
+function fallbackProvider(): AiProvider | null {
+  const configured = process.env.AI_FALLBACK_PROVIDER?.toLowerCase();
+  if (configured === "gemini" || configured === "openai") return configured;
+  return null;
+}
+
 function geminiModelCandidates(): string[] {
   const configured = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
   const fallbackModels = process.env.GEMINI_FALLBACK_MODELS ?? "gemini-2.0-flash,gemini-2.0-flash-lite";
@@ -48,6 +54,10 @@ function shouldTryNextGeminiModel(error: unknown): boolean {
   const status = (error as GeminiApiError).status;
   const message = error.message.toLowerCase();
   return status === 429 || status === 503 || (status === 400 && message.includes("high demand"));
+}
+
+function shouldTryFallbackProvider(error: unknown): boolean {
+  return shouldTryNextGeminiModel(error);
 }
 
 function openaiClient(): OpenAI {
@@ -202,5 +212,16 @@ async function requestGeminiPlan({
 }
 
 export async function generateBusinessPlan(input: IdeaInput): Promise<GeneratedPlan> {
-  return selectedProvider() === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input);
+  const provider = selectedProvider();
+
+  try {
+    return provider === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input);
+  } catch (error) {
+    const fallback = fallbackProvider();
+    if (!fallback || fallback === provider || !shouldTryFallbackProvider(error)) {
+      throw error;
+    }
+
+    return fallback === "gemini" ? generateWithGemini(input) : generateWithOpenAI(input);
+  }
 }
